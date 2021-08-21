@@ -14,5 +14,6 @@
         <module>order</module>
         <module>product</module>
         <module>ware</module>
+        <module>renren-fast</module>
     </modules>
 </project>
