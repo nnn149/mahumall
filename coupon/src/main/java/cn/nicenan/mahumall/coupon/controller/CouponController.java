@@ -27,6 +27,26 @@ import cn.nicenan.mahumall.common.utils.R;
  * 4. 添加任意配置
  * 5. 动态获取配置，使用两个注解@RefreshScope和  @Value("${配置项名字}")。优先使用配置中心内的值
 
+ 细节
+ 1. 命名空间  配置隔离。默认public(保留空间)。默认新增的配置都在public空间内。bootstrap.properties里面设置spring.cloud.nacos.config.namespace
+    可以设置开发，测试，生产命名空间。推荐：也可以每一个微服务之间项目隔离配置，每个微服务创建自己的命名空间(直接用微服务的名字)，只加载自己命名空间的配置，利用分组切换环境。
+ 2. 配置集  所有配置的集合
+ 3. 配置集id  类似配置的文件名，就是Data ID。 应用名字.properties
+ 4. 配置分组  所有的配置集都输入:DEFAULT_GROUP组  。组可以自己随便输。
+ 5. 加载多个配置文件。
+         多配置文件
+         spring.cloud.nacos.config.extension-configs[0].data-id="xxx.yml"
+         spring.cloud.nacos.config.extension-configs[0].group="dev"
+         spring.cloud.nacos.config.extension-configs[0].refresh=true
+
+ 推荐用法：
+ 1. 每个微服务创建自己的命名空间，创建Data ID，使用配置分组区分环境(dev,test,prod)。
+ 2. 在bootstrap.properties指定命名空间和分组
+     #命名空间
+     #spring.cloud.nacos.config.namespace=xxx
+     #配置分组
+     #spring.cloud.nacos.config.group=hhhh
+ 3. 以前springboot任何方式从配置文件中获取值都能用（@Value，@ConfigurationProperties等），优先使用配置中心的值。
 /**
  * 优惠券信息
  *
