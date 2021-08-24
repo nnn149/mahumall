@@ -10,3 +10,13 @@ spring:
           uri: https://www.qq.com
           predicates:
             - Query=url,qq
+
+        - id: admin_route
+#          lb负载均衡，注册中心内服务名（项目名）
+          uri: lb://renren-fast
+#          以api为开头的断言
+          predicates:
+            - Path=/api/**
+          filters:
+#            重写路径，按照renren-fast的路径规则
+            - RewritePath=/api/?(?<segment>.*), /renren-fast/$\{segment}
