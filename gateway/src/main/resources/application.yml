@@ -11,12 +11,19 @@ spring:
           predicates:
             - Query=url,qq
 
+        - id: product_route
+          uri: lb://mahumall-product
+          predicates:
+            - Path=/api/product/**
+          filters:
+            - RewritePath=/api/?(?<segment>.*), /$\{segment}
+
         - id: admin_route
-#          lb负载均衡，注册中心内服务名（项目名）
+          #          lb负载均衡，注册中心内服务名（项目名）
           uri: lb://renren-fast
-#          以api为开头的断言
+          #          以api为开头的断言
           predicates:
             - Path=/api/**
           filters:
-#            重写路径，按照renren-fast的路径规则
+            #            重写路径，按照renren-fast的路径规则
             - RewritePath=/api/?(?<segment>.*), /renren-fast/$\{segment}
