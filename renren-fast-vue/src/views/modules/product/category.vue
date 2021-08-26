@@ -5,6 +5,8 @@
              :expand-on-click-node="false"
              show-checkbox
              node-key="catId"
+             draggable
+             :allow-drop="allowDrop"
              :default-expanded-keys="expandedKey">
 
       <span class="custom-tree-node" slot-scope="{ node, data }">
@@ -56,6 +58,7 @@
 export default {
   data () {
     return {
+      dragNodeMaxDepth: 0,
       dialogTitle: '添加',
       dialogType: '',
       category: {
@@ -189,6 +192,28 @@ export default {
         this.category.productUnit = data.data.productUnit
         this.category.parentCid = data.data.parentCid
       })
+    },
+    allowDrop (draggingNode, dropNode, type) {
+      let maxDepth = 3
+      this.dragNodeMaxDepth = draggingNode.level
+      this.countNodeLevel(draggingNode)
+      let nowDepth = this.dragNodeMaxDepth - draggingNode.level + 1
+      console.log(nowDepth, dropNode, type)
+      if (type === 'inner') {
+        return dropNode.level + nowDepth <= maxDepth
+      } else {
+        return dropNode.parent.level + nowDepth <= maxDepth
+      }
+    },
+    countNodeLevel (node) {
+      if (node.childNodes != null && node.childNodes.length > 0) {
+        for (let i = 0; i < node.childNodes.length; i++) {
+          if (node.childNodes[i].level > this.dragNodeMaxDepth) {
+            this.dragNodeMaxDepth = node.childNodes[i].level
+          }
+          this.countNodeLevel(node.childNodes[i])
+        }
+      }
     }
 
   },
