@@ -7,6 +7,7 @@
              node-key="catId"
              draggable
              :allow-drop="allowDrop"
+             @node-drop="handleDrop"
              :default-expanded-keys="expandedKey">
 
       <span class="custom-tree-node" slot-scope="{ node, data }">
@@ -58,6 +59,7 @@
 export default {
   data () {
     return {
+      updateNodes: [],
       dragNodeMaxDepth: 0,
       dialogTitle: '添加',
       dialogType: '',
@@ -194,17 +196,55 @@ export default {
       })
     },
     allowDrop (draggingNode, dropNode, type) {
+      // 最多允许三级菜单
       let maxDepth = 3
       this.dragNodeMaxDepth = draggingNode.level
       this.countNodeLevel(draggingNode)
       let nowDepth = this.dragNodeMaxDepth - draggingNode.level + 1
-      console.log(nowDepth, dropNode, type)
       if (type === 'inner') {
         return dropNode.level + nowDepth <= maxDepth
       } else {
         return dropNode.parent.level + nowDepth <= maxDepth
       }
     },
+    handleDrop (draggingNode, dropNode, dropType, ev) {
+      this.updateNodes.splice(0, this.updateNodes.length)
+      let pCid = 0
+      let level = 0
+      let sortNode = null
+      if (dropType === 'inner') {
+        pCid = dropNode.data.catId
+        level = dropNode.level + 1
+        sortNode = dropNode
+      } else {
+        pCid = dropNode.data.parentCid
+        level = dropNode.level
+        sortNode = dropNode.parent
+      }
+      for (let i = 0; i < sortNode.childNodes.length; i++) {
+        // 判断前拖拽节点是否需要更改父节点和对被拖拽节点同层所有节点进行排序，只有遍历的节点是被拖拽节点时才需要更改父节点。
+        if (sortNode.childNodes[i].data.catId !== draggingNode.data.catId) {
+          // 不是当前拖拽节点，不用重新设置父节点和层级
+          this.updateNodes.push({catId: sortNode.childNodes[i].data.catId, sort: i})
+        } else {
+          this.updateNodes.push({catId: sortNode.childNodes[i].data.catId, sort: i, parentCid: pCid, catLevel: level})
+          // 重新设置当前节点的所有子节点的level，只能传入sortNode.childNodes[i]而不能用draggingNode。应为前者里面是最新的属性，影响level的值
+          this.updateChildNodeLevel(sortNode.childNodes[i])
+        }
+      }
+      console.log('要更新的节点', this.updateNodes)
+    },
+    // 计算子节点的层级
+    updateChildNodeLevel (node) {
+      if (node.childNodes != null && node.childNodes.length > 0) {
+        for (let i = 0; i < node.childNodes.length; i++) {
+          console.log(node.childNodes[i].data.name, node.childNodes[i])
+          this.updateNodes.push({catId: node.childNodes[i].data.catId, catLevel: node.childNodes[i].level})
+          this.updateChildNodeLevel(node.childNodes[i])
+        }
+      }
+    },
+    // 查找某节点的子节点的最大深度
     countNodeLevel (node) {
       if (node.childNodes != null && node.childNodes.length > 0) {
         for (let i = 0; i < node.childNodes.length; i++) {
