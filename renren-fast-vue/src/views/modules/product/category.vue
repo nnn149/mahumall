@@ -57,7 +57,7 @@
 </template>
 <script>
 export default {
-  data () {
+  data() {
     return {
       updateNodes: [],
       dragNodeMaxDepth: 0,
@@ -82,12 +82,12 @@ export default {
       }
     }
   },
-  activated () {
+  activated() {
     this.getMenus()
   },
   methods: {
 
-    getMenus () {
+    getMenus() {
       this.$http({
         url: this.$http.adornUrl('/product/category/list/tree'),
         method: 'get'
@@ -95,7 +95,7 @@ export default {
         this.menus = data.data
       })
     },
-    append (data) {
+    append(data) {
       this.dialogType = 'add'
       this.dialogVisible = true
       this.dialogTitle = '添加'
@@ -109,7 +109,7 @@ export default {
       this.category.icon = ''
     },
     // 添加三级分类
-    addCategory () {
+    addCategory() {
       this.$http({
         url: this.$http.adornUrl('/product/category/save'),
         method: 'post',
@@ -126,7 +126,7 @@ export default {
         this.expandedKey = [this.category.parentCid]
       })
     },
-    editCategory () {
+    editCategory() {
       let {catId, icon, productUnit, name} = this.category
       this.$http({
         url: this.$http.adornUrl('/product/category/update'),
@@ -138,15 +138,15 @@ export default {
             message: '菜单修改成功',
             type: 'success'
           })
-        // 刷新出新的菜单
+          // 刷新出新的菜单
           this.getMenus()
           this.dialogVisible = false
-        // 设置需要默认展开的菜单
+          // 设置需要默认展开的菜单
           this.expandedKey = [this.category.parentCid]
         }
       })
     },
-    remove (node, data) {
+    remove(node, data) {
       let ids = [data.catId]
       this.$confirm(`是否删除【${data.name}】菜单?`, '提示', {
         confirmButtonText: '确定',
@@ -172,7 +172,7 @@ export default {
         .catch(() => {
         })
     },
-    submitData () {
+    submitData() {
       if (this.dialogType === 'add') {
         this.addCategory()
       }
@@ -180,7 +180,7 @@ export default {
         this.editCategory()
       }
     },
-    edit (data) {
+    edit(data) {
       this.dialogType = 'edit'
       this.dialogVisible = true
       this.category.catId = data.catId
@@ -195,7 +195,7 @@ export default {
         this.category.parentCid = data.data.parentCid
       })
     },
-    allowDrop (draggingNode, dropNode, type) {
+    allowDrop(draggingNode, dropNode, type) {
       // 最多允许三级菜单
       let maxDepth = 3
       this.dragNodeMaxDepth = draggingNode.level
@@ -207,7 +207,7 @@ export default {
         return dropNode.parent.level + nowDepth <= maxDepth
       }
     },
-    handleDrop (draggingNode, dropNode, dropType, ev) {
+    handleDrop(draggingNode, dropNode, dropType, ev) {
       this.updateNodes.splice(0, this.updateNodes.length)
       let pCid = 0
       let level = 0
@@ -232,20 +232,32 @@ export default {
           this.updateChildNodeLevel(sortNode.childNodes[i])
         }
       }
-      console.log('要更新的节点', this.updateNodes)
+      this.$http({
+        url: this.$http.adornUrl('/product/category/update/sort'),
+        method: 'post',
+        data: this.$http.adornData(this.updateNodes, false)
+      }).then(({data}) => {
+        this.$message({
+          message: '菜单移动成功',
+          type: 'success'
+        })
+        // 刷新出新的菜单
+        this.getMenus()
+        // 设置需要默认展开的菜单,打开拖动前和拖动到的菜单
+        this.expandedKey = [draggingNode.data.parentCid, dropNode.parent.data.catId]
+      })
     },
     // 计算子节点的层级
-    updateChildNodeLevel (node) {
+    updateChildNodeLevel(node) {
       if (node.childNodes != null && node.childNodes.length > 0) {
         for (let i = 0; i < node.childNodes.length; i++) {
-          console.log(node.childNodes[i].data.name, node.childNodes[i])
           this.updateNodes.push({catId: node.childNodes[i].data.catId, catLevel: node.childNodes[i].level})
           this.updateChildNodeLevel(node.childNodes[i])
         }
       }
     },
     // 查找某节点的子节点的最大深度
-    countNodeLevel (node) {
+    countNodeLevel(node) {
       if (node.childNodes != null && node.childNodes.length > 0) {
         for (let i = 0; i < node.childNodes.length; i++) {
           if (node.childNodes[i].level > this.dragNodeMaxDepth) {
@@ -257,7 +269,7 @@ export default {
     }
 
   },
-  created () {
+  created() {
     this.getMenus()
   }
 }
