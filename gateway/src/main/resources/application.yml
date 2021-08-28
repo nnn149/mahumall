@@ -18,6 +18,13 @@ spring:
           filters:
             - RewritePath=/api/?(?<segment>.*), /$\{segment}
 
+        - id: third_part_route
+          uri: lb://mahumall-third-party
+          predicates:
+            - Path=/api/thirdparty/**
+          filters:
+            - RewritePath=/api/thirdparty/?(?<segment>.*), /$\{segment}
+
         - id: admin_route
           #          lb负载均衡，注册中心内服务名（项目名）
           uri: lb://renren-fast

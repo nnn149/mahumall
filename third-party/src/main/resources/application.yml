@@ -6,3 +6,11 @@ spring:
     name: mahumall-third-party
 server:
   port: 30000
+#配置到nacos配置中心
+#alibaba:
+#  cloud:
+#    access-key: xxx
+#    secret-key: xxx
+#    oss:
+#      endpoint: xxx
+#      bucket: mahumall
