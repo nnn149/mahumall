@@ -8,6 +8,7 @@
 
 package cn.nicenan.mahumall.common.utils;
 
+import cn.nicenan.mahumall.common.exception.BizCodeEnume;
 import org.apache.http.HttpStatus;
 
 import java.util.HashMap;
@@ -57,8 +58,16 @@ public class R extends HashMap<String, Object> {
 		return new R();
 	}
 
+	@Override
 	public R put(String key, Object value) {
 		super.put(key, value);
 		return this;
+	}
+
+	public static R useEnum (BizCodeEnume bizCodeEnume) {
+		R r = new R();
+		r.put("code", bizCodeEnume.getCode());
+		r.put("msg", bizCodeEnume.getMsg());
+		return r;
 	}
 }

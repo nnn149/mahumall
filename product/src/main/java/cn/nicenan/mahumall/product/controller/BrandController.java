@@ -5,12 +5,10 @@ import cn.nicenan.mahumall.common.utils.R;
 import cn.nicenan.mahumall.product.entity.BrandEntity;
 import cn.nicenan.mahumall.product.service.BrandService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
 
 //import org.apache.shiro.authz.annotation.RequiresPermissions;
@@ -57,18 +55,18 @@ public class BrandController {
      */
     @RequestMapping("/save")
     //@RequiresPermissions("product:brand:save")
-    public R save(@Valid @RequestBody BrandEntity brand, BindingResult result) {
-        if (result.hasErrors()) {
-            Map<String, String> map = new HashMap<>();
-            //获取校验的错误结果
-            result.getFieldErrors().forEach(item -> {
-                //错误消息和字段名
-                String message = item.getDefaultMessage();
-                String field = item.getField();
-                map.put(field, message);
-            });
-            return R.error(400, "提交数据不合法").put("data", map);
-        }
+    public R save(@Valid @RequestBody BrandEntity brand) {
+//        if (result.hasErrors()) {
+//            Map<String, String> map = new HashMap<>();
+//            //获取校验的错误结果
+//            result.getFieldErrors().forEach(item -> {
+//                //错误消息和字段名
+//                String message = item.getDefaultMessage();
+//                String field = item.getField();
+//                map.put(field, message);
+//            });
+//            return R.error(400, "提交数据不合法").put("data", map);
+//        }
         brandService.save(brand);
         return R.ok();
     }

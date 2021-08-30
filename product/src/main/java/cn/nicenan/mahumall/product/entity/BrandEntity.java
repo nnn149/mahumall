@@ -13,6 +13,7 @@ import java.io.Serializable;
  * 1. 给Bean添加校验注解,可以自定义message提示
  * 2. 参数加上 @Valid 注解开启校验功能
  * 3. 校验参数后紧跟一个BindingResult参数，即可拿到校验结果
+ * 4. 统一异常处理 使用Spring MVC提供的 @ControllerAdvice
  */
 
 /**
