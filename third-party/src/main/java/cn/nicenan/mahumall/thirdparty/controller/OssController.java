@@ -1,5 +1,6 @@
 package cn.nicenan.mahumall.thirdparty.controller;
 
+import cn.nicenan.mahumall.common.utils.R;
 import com.aliyun.oss.OSS;
 import com.aliyun.oss.common.utils.BinaryUtil;
 import com.aliyun.oss.model.MatchMode;
@@ -27,7 +28,7 @@ public class OssController {
     private String bucket;
 
     @RequestMapping("/oss/policy")
-    public Map<String, String> policy() {
+    public R policy() {
         String host = "https://" + bucket + "." + endpoint;
         String date = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
         String dir = date + "/";
@@ -57,6 +58,7 @@ public class OssController {
         } finally {
             ossClient.shutdown();
         }
-        return respMap;
+        return R.ok().put("data", respMap);
     }
+
 }

@@ -84,7 +84,7 @@ export default {
           _self.dataObj.signature = response.data.signature
           _self.dataObj.ossaccessKeyId = response.data.accessid
           // eslint-disable-next-line no-template-curly-in-string
-          _self.dataObj.key = response.data.dir + '/' + getUUID() + '_${filename}'
+          _self.dataObj.key = response.data.dir + getUUID() + '_${filename}'
           _self.dataObj.dir = response.data.dir
           _self.dataObj.host = response.data.host
           resolve(true)
