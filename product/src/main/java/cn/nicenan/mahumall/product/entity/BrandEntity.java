@@ -1,6 +1,7 @@
 package cn.nicenan.mahumall.product.entity;
 
 import cn.nicenan.mahumall.common.valid.AddGroup;
+import cn.nicenan.mahumall.common.valid.ListValue;
 import cn.nicenan.mahumall.common.valid.UpdateGroup;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -17,6 +18,12 @@ import java.io.Serializable;
  * 3. 校验参数后紧跟一个BindingResult参数，即可拿到校验结果
  * 4. 统一异常处理 使用Spring MVC提供的 @RestControllerAdvice   方法上 @ExceptionHandler
  * 5. 分组校验 1.校验注解上加上groups属性传入一个接口类进行标注。2.controller的参数使用@Validated传入接口类。没有标注分组的校验不起作用,不分组时才生效
+ * <p>
+ * 6. 自定义校验
+ * 1. 编写一个自定义校验注解
+ * 2. 编写一个自定义校验器实现ConstraintValidator接口
+ * 3. 关联校验器和注解  自定义注解上设置@Constraint(validatedBy = {ListValueConstraintValidator.class}  可以指定多个校验器,适配不同类型校验
+ * 4. 注解标注需要校验的字段
  */
 
 /**
@@ -56,11 +63,12 @@ public class BrandEntity implements Serializable {
     /**
      * 显示状态[0-不显示；1-显示]
      */
+    @ListValue(values = {0, 1}, groups = {AddGroup.class, UpdateGroup.class})
     private Integer showStatus;
     /**
      * 检索首字母
      */
-    @Pattern(regexp = "/^[a-zA-Z]$/", message = "检索首字母必须是一个字母", groups = {AddGroup.class, UpdateGroup.class})
+    @Pattern(regexp = "^[a-zA-Z]$", message = "检索首字母必须是一个字母", groups = {AddGroup.class, UpdateGroup.class})
     @NotBlank(groups = {AddGroup.class})
     private String firstLetter;
     /**

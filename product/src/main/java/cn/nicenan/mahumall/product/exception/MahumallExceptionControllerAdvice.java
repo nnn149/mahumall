@@ -50,6 +50,7 @@ public class MahumallExceptionControllerAdvice {
      */
     @ExceptionHandler(Throwable.class)
     public R handleException(Throwable throwable) {
+        log.error("错误", throwable);
         return R.useEnum(BizCodeEnume.UNKNOW_EXCEPTION);
     }
 }
