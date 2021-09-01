@@ -10,9 +10,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -49,6 +47,28 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         //todo 检查当前删除的菜单是否被引用
 
         baseMapper.deleteBatchIds(singletonList);
+    }
+
+    /**
+     * 找到完整路径 父，子，孙
+     *
+     * @param catelogId
+     * @return
+     */
+    @Override
+    public Long[] findCatelogPath(Long catelogId) {
+        List<Long> path = findParentPath(catelogId, new ArrayList<>());
+        Collections.reverse(path);
+        return (path.toArray(new Long[path.size()]));
+    }
+
+    private List<Long> findParentPath(Long catelogId, List<Long> path) {
+        path.add(catelogId);
+        CategoryEntity byId = this.getById(catelogId);
+        if (byId.getParentCid() != 0) {
+            findParentPath(byId.getParentCid(), path);
+        }
+        return path;
     }
 
     private List<CategoryEntity> getChildrens(CategoryEntity root, List<CategoryEntity> all) {
