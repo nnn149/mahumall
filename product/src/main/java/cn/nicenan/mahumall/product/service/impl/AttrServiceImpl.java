@@ -14,6 +14,7 @@ import cn.nicenan.mahumall.product.service.CategoryService;
 import cn.nicenan.mahumall.product.vo.AttrRespVo;
 import cn.nicenan.mahumall.product.vo.AttrVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.mysql.cj.util.StringUtils;
@@ -97,6 +98,55 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
         }).collect(Collectors.toList());
         pageUtils.setList(respVos);
         return pageUtils;
+    }
+
+    @Override
+    public AttrRespVo getAttrInfo(Long attrId) {
+        AttrRespVo attrRespVo = new AttrRespVo();
+        AttrEntity byId = getById(attrId);
+        BeanUtils.copyProperties(byId, attrRespVo);
+
+        //设置分组信息
+        AttrAttrgroupRelationEntity attrGroupRelation = attrAttrgroupRelationService.getBaseMapper().selectOne(
+                new QueryWrapper<AttrAttrgroupRelationEntity>()
+                        .eq("attr_id", attrId)
+        );
+        if (attrGroupRelation != null) {
+            attrRespVo.setAttrGroupId(attrGroupRelation.getAttrGroupId());
+            AttrGroupEntity attrGroupEntity = attrGroupService.getBaseMapper().selectById(attrGroupRelation.getAttrGroupId());
+            if (attrGroupEntity != null) {
+                attrRespVo.setGroupName(attrGroupEntity.getAttrGroupName());
+            }
+        }
+        //设置分类信息
+        Long catelogId = byId.getCatelogId();
+        Long[] catelogPath = categoryService.findCatelogPath(catelogId);
+        attrRespVo.setCatelogPath(catelogPath);
+        CategoryEntity categoryEntity = categoryService.getBaseMapper().selectById(catelogId);
+        if (categoryEntity != null) {
+            attrRespVo.setCatelogName(categoryEntity.getName());
+        }
+        return attrRespVo;
+    }
+
+    @Transactional
+    @Override
+    public void updateAttr(AttrVo attr) {
+        AttrEntity attrEntity = new AttrEntity();
+        BeanUtils.copyProperties(attr, attrEntity);
+        updateById(attrEntity);
+        //修改分组关联
+        AttrAttrgroupRelationEntity attrgroupRelation = new AttrAttrgroupRelationEntity();
+        attrgroupRelation.setAttrGroupId(attr.getAttrGroupId());
+        attrgroupRelation.setAttrId(attr.getAttrId());
+        Long count = attrAttrgroupRelationService.getBaseMapper().selectCount(new QueryWrapper<AttrAttrgroupRelationEntity>()
+                .eq("attr_id", attr.getAttrId()));
+        if (count > 0) {
+            attrAttrgroupRelationService.getBaseMapper().update(attrgroupRelation, new UpdateWrapper<AttrAttrgroupRelationEntity>()
+                    .eq("attr_id", attr.getAttrId()));
+        } else {
+            attrAttrgroupRelationService.getBaseMapper().insert(attrgroupRelation);
+        }
     }
 
 }
