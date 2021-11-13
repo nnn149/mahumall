@@ -1,0 +1,6 @@
+{
+    "java.dependency.packagePresentation": "hierarchical",
+    "files.exclude": {
+        "renren-fast-vue": true
+    }
+}
