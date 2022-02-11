@@ -9,8 +9,8 @@ server:
 #配置到nacos配置中心
 #alibaba:
 #  cloud:
-#    access-key: xxx
-#    secret-key: xxx
+#    access-key: LTAI5tG1eLWeyzHa55q8N21U
+#    secret-key: N7gOTMaLz9ex7vn0w2ug4RHYLe0JO9
 #    oss:
-#      endpoint: xxx
+#      endpoint: oss-cn-shenzhen.aliyuncs.com
 #      bucket: mahumall
