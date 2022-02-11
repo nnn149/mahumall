@@ -2,29 +2,29 @@ spring:
   cloud:
     gateway:
       routes:
-        - id: nicenan_route
-          uri: https://www.nicenan.cn
-          predicates:
-            - Query=url,nicenan
-        - id: qq_route
-          uri: https://www.qq.com
-          predicates:
-            - Query=url,qq
-
+        #商品服务的路由
         - id: product_route
           uri: lb://mahumall-product
           predicates:
             - Path=/api/product/**
           filters:
             - RewritePath=/api/?(?<segment>.*), /$\{segment}
-
+        #第三方服务路由
         - id: third_part_route
           uri: lb://mahumall-third-party
           predicates:
             - Path=/api/thirdparty/**
           filters:
             - RewritePath=/api/thirdparty/?(?<segment>.*), /$\{segment}
-
+        #会员服务路由
+        - id: member_route
+          uri: lb://mahumall-member
+          predicates:
+            - Path=/api/member/**
+          filters:
+            - #重写 api 去掉其他保留
+            - RewritePath=/api/?(?<segment>.*), /$\{segment}
+        #剩下以api开头的请求都给renren-fast后端处理
         - id: admin_route
           #          lb负载均衡，注册中心内服务名（项目名）
           uri: lb://renren-fast
