@@ -4,9 +4,11 @@ import cn.nicenan.mahumall.common.utils.PageUtils;
 import cn.nicenan.mahumall.common.utils.R;
 import cn.nicenan.mahumall.product.entity.AttrEntity;
 import cn.nicenan.mahumall.product.entity.AttrGroupEntity;
+import cn.nicenan.mahumall.product.service.AttrAttrgroupRelationService;
 import cn.nicenan.mahumall.product.service.AttrGroupService;
 import cn.nicenan.mahumall.product.service.AttrService;
 import cn.nicenan.mahumall.product.service.CategoryService;
+import cn.nicenan.mahumall.product.vo.AttrGroupRelationVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,11 +36,32 @@ public class AttrGroupController {
     private CategoryService categoryService;
     @Autowired
     private AttrService attrService;
+    @Autowired
+    AttrAttrgroupRelationService relationService;
 
     @GetMapping("/{attrgroupId}/attr/relation")
     public R attrRelation(@PathVariable("attrgroupId") Long attrgroupId) {
         List<AttrEntity> entities = attrService.getRelationAttr(attrgroupId);
         return R.ok().put("data", entities);
+    }
+
+    @GetMapping("/{attrgroupId}/noattr/relation")
+    public R attrNoRelation(@PathVariable("attrgroupId") Long attrgroupId,
+                            @RequestParam Map<String, Object> params) {
+        PageUtils page = attrService.getNoRelationAttr(params, attrgroupId);
+        return R.ok().put("page", page);
+    }
+
+    @PostMapping("/attr/relation")
+    public R addRelation(@RequestBody AttrGroupRelationVo[] vos) {
+        relationService.saveBatch(vos);
+        return R.ok();
+    }
+
+    @PostMapping("attr/relation/delete")
+    public R deleteRelation(@RequestBody AttrGroupRelationVo[] vos) {
+        attrService.deleterRelation(vos);
+        return R.ok();
     }
 
     /**

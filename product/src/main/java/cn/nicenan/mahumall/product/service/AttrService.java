@@ -1,5 +1,6 @@
 package cn.nicenan.mahumall.product.service;
 
+import cn.nicenan.mahumall.product.vo.AttrGroupRelationVo;
 import cn.nicenan.mahumall.product.vo.AttrRespVo;
 import cn.nicenan.mahumall.product.vo.AttrVo;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -34,5 +35,15 @@ public interface AttrService extends IService<AttrEntity> {
      * @return
      */
     List<AttrEntity> getRelationAttr(Long attrgroupId);
+
+    void deleterRelation(AttrGroupRelationVo[] vos);
+
+    /***
+     * 获取当前分组没有关联的所有基本属性
+     * @param params 分页
+     * @param attrgroupId 属性分组id
+     * @return
+     */
+    PageUtils getNoRelationAttr(Map<String, Object> params, Long attrgroupId);
 }
 

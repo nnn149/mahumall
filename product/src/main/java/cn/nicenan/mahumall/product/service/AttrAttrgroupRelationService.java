@@ -1,5 +1,6 @@
 package cn.nicenan.mahumall.product.service;
 
+import cn.nicenan.mahumall.product.vo.AttrGroupRelationVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 import cn.nicenan.mahumall.common.utils.PageUtils;
 import cn.nicenan.mahumall.product.entity.AttrAttrgroupRelationEntity;
@@ -16,5 +17,7 @@ import java.util.Map;
 public interface AttrAttrgroupRelationService extends IService<AttrAttrgroupRelationEntity> {
 
     PageUtils queryPage(Map<String, Object> params);
+
+    void saveBatch(AttrGroupRelationVo[] vos);
 }
 
