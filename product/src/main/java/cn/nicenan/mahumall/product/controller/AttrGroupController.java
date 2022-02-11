@@ -2,13 +2,16 @@ package cn.nicenan.mahumall.product.controller;
 
 import cn.nicenan.mahumall.common.utils.PageUtils;
 import cn.nicenan.mahumall.common.utils.R;
+import cn.nicenan.mahumall.product.entity.AttrEntity;
 import cn.nicenan.mahumall.product.entity.AttrGroupEntity;
 import cn.nicenan.mahumall.product.service.AttrGroupService;
+import cn.nicenan.mahumall.product.service.AttrService;
 import cn.nicenan.mahumall.product.service.CategoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 //import org.apache.shiro.authz.annotation.RequiresPermissions;
@@ -29,6 +32,14 @@ public class AttrGroupController {
 
     @Autowired
     private CategoryService categoryService;
+    @Autowired
+    private AttrService attrService;
+
+    @GetMapping("/{attrgroupId}/attr/relation")
+    public R attrRelation(@PathVariable("attrgroupId") Long attrgroupId) {
+        List<AttrEntity> entities = attrService.getRelationAttr(attrgroupId);
+        return R.ok().put("data", entities);
+    }
 
     /**
      * 列表
@@ -89,3 +100,4 @@ public class AttrGroupController {
     }
 
 }
+

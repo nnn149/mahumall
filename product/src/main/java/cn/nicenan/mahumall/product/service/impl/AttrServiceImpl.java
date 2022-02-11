@@ -161,4 +161,9 @@ public class AttrServiceImpl extends ServiceImpl<AttrDao, AttrEntity> implements
 
     }
 
+    @Override
+    public List<AttrEntity> getRelationAttr(Long attrgroupId) {
+        return null;
+    }
+
 }

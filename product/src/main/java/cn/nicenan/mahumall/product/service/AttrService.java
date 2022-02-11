@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import cn.nicenan.mahumall.common.utils.PageUtils;
 import cn.nicenan.mahumall.product.entity.AttrEntity;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -26,5 +27,12 @@ public interface AttrService extends IService<AttrEntity> {
     AttrRespVo getAttrInfo(Long attrId);
 
     void updateAttr(AttrVo attr);
+
+    /**
+     * 根据分组id查找关联的所有基本属性
+     * @param attrgroupId 分组id
+     * @return
+     */
+    List<AttrEntity> getRelationAttr(Long attrgroupId);
 }
 
