@@ -2,13 +2,23 @@ spring:
   cloud:
     gateway:
       routes:
+        #会员服务路由
+        - id: member_route
+          uri: lb://mahumall-member
+          predicates:
+            - Path=/api/member/**
+          filters:
+            - RewritePath=/api/?(?<segment>.*), /$\{segment}
+
         #商品服务的路由
         - id: product_route
           uri: lb://mahumall-product
           predicates:
             - Path=/api/product/**
           filters:
+            # api去掉其他保留
             - RewritePath=/api/?(?<segment>.*), /$\{segment}
+
         #第三方服务路由
         - id: third_part_route
           uri: lb://mahumall-third-party
@@ -16,21 +26,14 @@ spring:
             - Path=/api/thirdparty/**
           filters:
             - RewritePath=/api/thirdparty/?(?<segment>.*), /$\{segment}
-        #会员服务路由
-        - id: member_route
-          uri: lb://mahumall-member
-          predicates:
-            - Path=/api/member/**
-          filters:
-            - #重写 api 去掉其他保留
-            - RewritePath=/api/?(?<segment>.*), /$\{segment}
+
         #剩下以api开头的请求都给renren-fast后端处理
         - id: admin_route
-          #          lb负载均衡，注册中心内服务名（项目名）
+          #lb负载均衡，注册中心内服务名（项目名）
           uri: lb://renren-fast
-          #          以api为开头的断言
+          #以api为开头的断言
           predicates:
             - Path=/api/**
           filters:
-            #            重写路径，按照renren-fast的路径规则
+            # 重写路径，按照renren-fast的路径规则
             - RewritePath=/api/?(?<segment>.*), /renren-fast/$\{segment}
