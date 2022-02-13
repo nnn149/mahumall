@@ -3,6 +3,7 @@ package cn.nicenan.mahumall.product.service.impl;
 import cn.nicenan.mahumall.common.utils.PageUtils;
 import cn.nicenan.mahumall.common.utils.Query;
 import cn.nicenan.mahumall.product.dao.CategoryBrandRelationDao;
+import cn.nicenan.mahumall.product.entity.BrandEntity;
 import cn.nicenan.mahumall.product.entity.CategoryBrandRelationEntity;
 import cn.nicenan.mahumall.product.service.BrandService;
 import cn.nicenan.mahumall.product.service.CategoryBrandRelationService;
@@ -14,7 +15,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 
 @Service("categoryBrandRelationService")
@@ -56,6 +59,17 @@ public class CategoryBrandRelationServiceImpl extends ServiceImpl<CategoryBrandR
     @Override
     public void updateCategory(Long catId, String name) {
         baseMapper.updateCategory(catId, name);
+    }
+
+    @Override
+    public List<BrandEntity> getBrandsByCatId(long catId) {
+        List<CategoryBrandRelationEntity> catelogId = baseMapper.selectList(new QueryWrapper<CategoryBrandRelationEntity>().eq("catelog_id", catId));
+        List<BrandEntity> collect = catelogId.stream().map(item -> {
+            Long brandId = item.getBrandId();
+            BrandEntity byId = brandService.getById(brandId);
+            return byId;
+        }).collect(Collectors.toList());
+        return collect;
     }
 
 }
