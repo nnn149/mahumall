@@ -9,6 +9,7 @@ import cn.nicenan.mahumall.product.service.AttrGroupService;
 import cn.nicenan.mahumall.product.service.AttrService;
 import cn.nicenan.mahumall.product.service.CategoryService;
 import cn.nicenan.mahumall.product.vo.AttrGroupRelationVo;
+import cn.nicenan.mahumall.product.vo.AttrGroupWithAttrsVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -38,6 +39,14 @@ public class AttrGroupController {
     private AttrService attrService;
     @Autowired
     AttrAttrgroupRelationService relationService;
+
+    @GetMapping("/{catelogId}/withattr")
+    public R getAttrGroupWithAttrs(@PathVariable Long catelogId) {
+        //查出当前分类下的所有属性分组
+        //查出每个属性分组的所有属性
+       List<AttrGroupWithAttrsVo> vos= attrGroupService.getattrGroupWithAttrsByCatelogId(catelogId);
+       return R.ok().put("data", vos);
+    }
 
     @GetMapping("/{attrgroupId}/attr/relation")
     public R attrRelation(@PathVariable("attrgroupId") Long attrgroupId) {

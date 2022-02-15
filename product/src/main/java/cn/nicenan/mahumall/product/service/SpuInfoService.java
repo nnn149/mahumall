@@ -1,5 +1,7 @@
 package cn.nicenan.mahumall.product.service;
 
+import cn.nicenan.mahumall.product.entity.SpuInfoDescEntity;
+import cn.nicenan.mahumall.product.vo.SpuSaveVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 import cn.nicenan.mahumall.common.utils.PageUtils;
 import cn.nicenan.mahumall.product.entity.SpuInfoEntity;
@@ -16,5 +18,11 @@ import java.util.Map;
 public interface SpuInfoService extends IService<SpuInfoEntity> {
 
     PageUtils queryPage(Map<String, Object> params);
+
+    void saveSpuInfo(SpuSaveVo vo);
+
+    void saveBaseSpuInfo(SpuInfoEntity spuInfoEntity);
+
+
 }
 

@@ -3,7 +3,7 @@
     <el-upload
       action="https://mahumall.oss-cn-shenzhen.aliyuncs.com"
       :data="dataObj"
-      list-type="picture-card"
+      :list-type="listType"
       :file-list="fileList"
       :before-upload="beforeUpload"
       :on-remove="handleRemove"
@@ -11,6 +11,7 @@
       :on-preview="handlePreview"
       :limit="maxCount"
       :on-exceed="handleExceed"
+      :show-file-list="showFile"
     >
       <i class="el-icon-plus"></i>
     </el-upload>
@@ -31,7 +32,16 @@ export default {
     maxCount: {
       type: Number,
       default: 30
+    },
+    listType: {
+      type: String,
+      default: 'picture-card'
+    },
+    showFile: {
+      type: Boolean,
+      default: true
     }
+
   },
   data () {
     return {
@@ -79,11 +89,11 @@ export default {
       return new Promise((resolve, reject) => {
         policy()
           .then(response => {
-            console.log('这是什么${filename}')
+            // console.log("这是什么${filename}");
             _self.dataObj.policy = response.data.policy
             _self.dataObj.signature = response.data.signature
             _self.dataObj.ossaccessKeyId = response.data.accessid
-            _self.dataObj.key = response.data.dir + '/' + getUUID() + '_${filename}'
+            _self.dataObj.key = response.data.dir + getUUID() + '_${filename}'
             _self.dataObj.dir = response.data.dir
             _self.dataObj.host = response.data.host
             resolve(true)
@@ -98,7 +108,7 @@ export default {
       this.fileList.push({
         name: file.name,
         // url: this.dataObj.host + "/" + this.dataObj.dir + "/" + file.name； 替换${filename}为真正的文件名
-        url: this.dataObj.host + '/' + this.dataObj.key.replace(`${filename}`, file.name)
+        url: this.dataObj.host + '/' + this.dataObj.key.replace('${filename}', file.name)
       })
       this.emitInput(this.fileList)
     },

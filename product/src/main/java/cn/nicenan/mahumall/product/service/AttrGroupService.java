@@ -1,9 +1,11 @@
 package cn.nicenan.mahumall.product.service;
 
+import cn.nicenan.mahumall.product.vo.AttrGroupWithAttrsVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 import cn.nicenan.mahumall.common.utils.PageUtils;
 import cn.nicenan.mahumall.product.entity.AttrGroupEntity;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,5 +20,12 @@ public interface AttrGroupService extends IService<AttrGroupEntity> {
     PageUtils queryPage(Map<String, Object> params);
 
     PageUtils queryPage(Map<String, Object> params, Long categoryId);
+
+    /**
+     * 根据分类id查出所有的分组以及这些组里面的属性
+     * @param catelogId
+     * @return
+     */
+    List<AttrGroupWithAttrsVo> getattrGroupWithAttrsByCatelogId(Long catelogId);
 }
 
