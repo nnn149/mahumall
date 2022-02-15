@@ -1,13 +1,19 @@
 package cn.nicenan.mahumall.product.service.impl;
 
+import cn.nicenan.mahumall.common.to.SkuReductionTo;
+import cn.nicenan.mahumall.common.to.SpuBoundTo;
+import cn.nicenan.mahumall.common.utils.R;
 import cn.nicenan.mahumall.product.entity.*;
+import cn.nicenan.mahumall.product.feign.CouponFeignService;
 import cn.nicenan.mahumall.product.service.*;
 import cn.nicenan.mahumall.product.vo.*;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.beans.Transient;
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -20,6 +26,7 @@ import cn.nicenan.mahumall.common.utils.PageUtils;
 import cn.nicenan.mahumall.common.utils.Query;
 
 import cn.nicenan.mahumall.product.dao.SpuInfoDao;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.xml.crypto.Data;
 
@@ -42,6 +49,9 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
     @Autowired
     private SkuImagesService skuImagesService;
 
+    @Autowired
+    private CouponFeignService couponFeignService;
+
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
         IPage<SpuInfoEntity> page = this.page(new Query<SpuInfoEntity>().getPage(params), new QueryWrapper<SpuInfoEntity>());
@@ -49,7 +59,11 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         return new PageUtils(page);
     }
 
-    @Transient
+    /**
+     * TODO 高级部分完善失败和事务处理
+     * @param vo
+     */
+    @Transactional
     @Override
     public void saveSpuInfo(SpuSaveVo vo) {
         //1.保存Spu基本信息 pms_spu_info
@@ -85,6 +99,15 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         attrValueService.saveProductAttr(collect);
 
         //5.保存spu的积分信息 mahumall : sms->sms_spu_bounds
+        Bounds bounds = vo.getBounds();
+        SpuBoundTo spuBoundTo = new SpuBoundTo();
+        BeanUtils.copyProperties(bounds, spuBoundTo);
+        spuBoundTo.setSpuId(infoEntity.getId());
+        R r = couponFeignService.saveSpuBounds(spuBoundTo);
+        if (r.getCode() != 0) {
+            log.error("远程保存spu积分信息失败");
+        }
+
 
         //6.保存当前spu对应的所有sku信息
         //6.1 sku的基本信息 pms_sku_info
@@ -113,7 +136,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
                     skuImagesEntity.setImgUrl(img.getImgUrl());
                     skuImagesEntity.setDefaultImg(img.getDefaultImg());
                     return skuImagesEntity;
-                }).collect(Collectors.toList());
+                }).filter(entity-> StringUtils.isNotEmpty(entity.getImgUrl())).collect(Collectors.toList());
                 //6.2 sku的图片信息 pms_sku_images
                 skuImagesService.saveBatch(imagesEntities);
                 //6.3 sku的销售属性 pms_sku_sale_attr_value
@@ -126,6 +149,15 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
                 }).collect(Collectors.toList());
                 skuSaleAttrValueService.saveBatch(skuSaleAttrValueEntities);
                 //6.4 sku的优惠满减信息 mahumall : sms-> sms_sku_ladder\sms_sku_full_reduction\sms_member_price
+                SkuReductionTo skuReductionTo = new SkuReductionTo();
+                BeanUtils.copyProperties(item, skuReductionTo);
+                skuReductionTo.setSkuId(skuId);
+                if (skuReductionTo.getFullCount() > 0 || skuReductionTo.getFullPrice().compareTo(new BigDecimal("0")) == 1) {
+                    R r1 = couponFeignService.saveSkuReduction(skuReductionTo);
+                    if (r1.getCode() != 0) {
+                        log.error("远程保存sku优惠信息失败");
+                    }
+                }
             });
         }
 

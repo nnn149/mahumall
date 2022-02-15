@@ -13,6 +13,8 @@
 
 [feign远程调用](member/src/main/java/cn/nicenan/mahumall/member/feign/CouponFeignService.java)
 
+[JSR303 校验](product/src/main/java/cn/nicenan/mahumall/product/entity/BrandEntity.java)
+
 [api文档](https://easydoc.net/s/78237135/ZUqEdvA4/hKJTcbfd)
 
 ##### 商品系统平台属性
@@ -24,3 +26,5 @@
 
 [p83 发布商品流程](https://www.bilibili.com/video/BV1np4y1C7Yf?p=83&spm_id_from=pageDriver) 
 
+mysql默认隔离级别是可重复读，调试的时候改成 未提交读 Read uncommitted 方便查询
+`SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;`
