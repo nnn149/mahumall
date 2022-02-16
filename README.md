@@ -11,6 +11,15 @@
 
 [geteway例子](gateway/src/main/resources/application.yml)
 
+### feign
+```text
+     *   1)、让所有请求过网关；
+     *          1、@FeignClient("mahumall-gateway")：mahumall-gateway所在的机器发请求
+     *          2、/api/product/skuinfo/info/{skuId}
+     *   2）、直接让后台指定服务处理
+     *          1、@FeignClient("mahumall-product")
+     *          2、/product/skuinfo/info/{skuId}
+```
 [feign远程调用](member/src/main/java/cn/nicenan/mahumall/member/feign/CouponFeignService.java)
 
 [JSR303 校验](product/src/main/java/cn/nicenan/mahumall/product/entity/BrandEntity.java)
@@ -23,6 +32,14 @@
 属性分组有类别
 销售属性((笛卡尔积)组合成sku?)用于搜索，没有再分组，比如商品编号，毛重，系统
 参考jd
+
+#### 库存采购
+先生成采购单，再添加采购需求
+由人工或者系统低库存自动预警生成
+采购需求合并成采购单(人工合并，系统定时合并)
+分配给采购人员
+通知供应商或者自主采购
+采购单入库，添加库存
 
 [p83 发布商品流程](https://www.bilibili.com/video/BV1np4y1C7Yf?p=83&spm_id_from=pageDriver) 
 

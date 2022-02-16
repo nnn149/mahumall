@@ -3,13 +3,16 @@ package cn.nicenan.mahumall.product.controller;
 import cn.nicenan.mahumall.common.utils.PageUtils;
 import cn.nicenan.mahumall.common.utils.R;
 import cn.nicenan.mahumall.product.entity.AttrEntity;
+import cn.nicenan.mahumall.product.entity.ProductAttrValueEntity;
 import cn.nicenan.mahumall.product.service.AttrService;
+import cn.nicenan.mahumall.product.service.ProductAttrValueService;
 import cn.nicenan.mahumall.product.vo.AttrRespVo;
 import cn.nicenan.mahumall.product.vo.AttrVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 //import org.apache.shiro.authz.annotation.RequiresPermissions;
@@ -27,13 +30,21 @@ import java.util.Map;
 public class AttrController {
     @Autowired
     private AttrService attrService;
-
+    @Autowired
+    private ProductAttrValueService productAttrValueService;
     @GetMapping("/{attrType}/list/{catelogId}")
     public R baseAttrList(@RequestParam Map<String, Object> params, @PathVariable Long catelogId, @PathVariable("attrType") String attrType) {
         PageUtils page = attrService.queryBaseAttrPage(params, catelogId,attrType);
         return R.ok().put("page", page);
     }
-
+    /**
+     * 查询属性规格
+     */
+    @GetMapping("/base/listforspu/{spuId}")
+    public R baseAttrListForSpu(@PathVariable("spuId") Long spuId){
+        List<ProductAttrValueEntity> entities = productAttrValueService.baseAttrListForSpu(spuId);
+        return R.ok().put("data", entities);
+    }
     /**
      * 列表
      */
@@ -55,7 +66,11 @@ public class AttrController {
         AttrRespVo attrRespVo = attrService.getAttrInfo(attrId);
         return R.ok().put("attr", attrRespVo);
     }
-
+    @PostMapping("/update/{spuId}")
+    public R updateSpiAttr(@PathVariable("spuId") Long spuId, @RequestBody List<ProductAttrValueEntity> entities){
+        productAttrValueService.updateSpuAttr(spuId, entities);
+        return R.ok();
+    }
     /**
      * 保存
      */

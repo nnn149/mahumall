@@ -60,7 +60,7 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
                     wrapper.le("price", max);
                 }
             } catch (Exception e) {
-                System.out.println("com.firenay.mall.product.service.impl.SkuInfoServiceImpl：前端传来非数字字符");
+                System.out.println("cn.nicenan.mahumall.product.service.impl.SkuInfoServiceImpl：前端传来非数字字符");
             }
         }
         IPage<SkuInfoEntity> page = this.page(
