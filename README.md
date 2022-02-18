@@ -45,3 +45,43 @@
 
 mysql默认隔离级别是可重复读，调试的时候改成 未提交读 Read uncommitted 方便查询
 `SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;`
+
+### Elasticsearch
+
+#### Docker安装
+
+```bash
+mkdir -p /root/elasticsearch/config
+mkdir -p /root/elasticsearch/data
+mkdir -p /root/elasticsearch/plugins
+mkdir -p /root/elasticsearch/logs
+echo "http.host: 0.0.0.0">>/root/elasticsearch/config/elasticsearch.yml
+chmod -R 777 /root/elasticsearch/
+
+docker run -d -p 9200:9200 -p 9300:9300 \
+--name elasticsearch \
+-e "discovery.type=single-node" \
+-e ES_JAVA_OPTS="-Xms128m -Xmx256m" \
+-v /root/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml \
+-v /root/elasticsearch/data:/usr/share/elasticsearch/data \
+-v /root/elasticsearch/plugins:/usr/share/elasticsearch/plugins \
+-v /root/elasticsearch/logs:/usr/share/elasticsearch/logs \
+docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+
+# http://192.168.2.211:9200/
+
+docker run -d --name kib01-test -p 5601:5601 -e "ELASTICSEARCH_HOSTS=http://192.168.2.211:9200" docker.elastic.co/kibana/kibana:7.17.0
+```
+
+7.4.2版本测试数据:`https://github.com/elastic/elasticsearch/blob/v7.4.2/docs/src/test/resources/accounts.json`
+
+`POST /bank/account/_bulk`
+
+http://192.168.2.211:5601/app/dev_tools#/console
+
+
+
+基础结构 Index Type Document(json)
+采用倒排索引，分词存储
+
+查询对象语言 QueryDSL

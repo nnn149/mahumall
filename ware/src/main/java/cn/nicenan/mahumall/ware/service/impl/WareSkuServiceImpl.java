@@ -4,12 +4,16 @@ import cn.nicenan.mahumall.common.utils.R;
 import cn.nicenan.mahumall.ware.feign.ProductFeignService;
 import cn.nicenan.mahumall.ware.service.WareOrderTaskDetailService;
 import cn.nicenan.mahumall.ware.service.WareOrderTaskService;
+import cn.nicenan.mahumall.ware.vo.SkuHasStockVo;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -95,6 +99,21 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
             wareSkuDao.addStock(skuId, wareId, skuNum);
         }
         return price;
+    }
+
+    @Override
+    public List<SkuHasStockVo> getSkusHasStock(List<Long> skuIds) {
+
+        List<SkuHasStockVo> collect = baseMapper.selectMaps(new QueryWrapper<WareSkuEntity>()
+                .select("SUM(stock-stock_locked) ture_stock,sku_id").in("sku_id", skuIds)
+                .groupBy("sku_id")).stream().map(map -> {
+            SkuHasStockVo vo = new SkuHasStockVo();
+            vo.setSkuId((Long) map.get("sku_id"));
+            vo.setStock(((BigDecimal) map.get("ture_stock")).intValue());
+            return vo;
+        }).collect(Collectors.toList());
+
+        return collect;
     }
 
 }

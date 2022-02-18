@@ -3,7 +3,7 @@
 
 <mapper namespace="cn.nicenan.mahumall.product.dao.AttrDao">
 
-	<!-- 可根据自己的需求，是否要使用 -->
+    <!-- 可根据自己的需求，是否要使用 -->
     <resultMap type="cn.nicenan.mahumall.product.entity.AttrEntity" id="attrMap">
         <result property="attrId" column="attr_id"/>
         <result property="attrName" column="attr_name"/>
@@ -15,6 +15,12 @@
         <result property="catelogId" column="catelog_id"/>
         <result property="showDesc" column="show_desc"/>
     </resultMap>
+    <select id="selectSearchAttrIds" resultType="java.lang.Long">
+        SELECT attr_id FROM `pms_attr` WHERE attr_id IN
+        <foreach collection="attrIds" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </select>
 
 
 </mapper>

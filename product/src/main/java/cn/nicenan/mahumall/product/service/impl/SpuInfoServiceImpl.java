@@ -1,10 +1,13 @@
 package cn.nicenan.mahumall.product.service.impl;
 
+import cn.nicenan.mahumall.common.to.SkuHasStockTo;
 import cn.nicenan.mahumall.common.to.SkuReductionTo;
 import cn.nicenan.mahumall.common.to.SpuBoundTo;
+import cn.nicenan.mahumall.common.to.es.SkuEsModel;
 import cn.nicenan.mahumall.common.utils.R;
 import cn.nicenan.mahumall.product.entity.*;
 import cn.nicenan.mahumall.product.feign.CouponFeignService;
+import cn.nicenan.mahumall.product.feign.WareFeignService;
 import cn.nicenan.mahumall.product.service.*;
 import cn.nicenan.mahumall.product.vo.*;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
@@ -14,9 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.beans.Transient;
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -51,6 +52,12 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
 
     @Autowired
     private CouponFeignService couponFeignService;
+    @Autowired
+    private BrandService brandService;
+    @Autowired
+    private CategoryService categoryService;
+    @Autowired
+    private WareFeignService wareFeignService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -61,6 +68,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
 
     /**
      * TODO 高级部分完善失败和事务处理
+     *
      * @param vo
      */
     @Transactional
@@ -136,7 +144,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
                     skuImagesEntity.setImgUrl(img.getImgUrl());
                     skuImagesEntity.setDefaultImg(img.getDefaultImg());
                     return skuImagesEntity;
-                }).filter(entity-> StringUtils.isNotEmpty(entity.getImgUrl())).collect(Collectors.toList());
+                }).filter(entity -> StringUtils.isNotEmpty(entity.getImgUrl())).collect(Collectors.toList());
                 //6.2 sku的图片信息 pms_sku_images
                 skuImagesService.saveBatch(imagesEntities);
                 //6.3 sku的销售属性 pms_sku_sale_attr_value
@@ -171,22 +179,22 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
 
         // 根据 spu管理带来的条件进行叠加模糊查询
         String key = (String) params.get("key");
-        if(!StringUtils.isEmpty(key)){
-            wrapper.and(w -> w.eq("id", key).or().like("spu_name",key));
+        if (!StringUtils.isEmpty(key)) {
+            wrapper.and(w -> w.eq("id", key).or().like("spu_name", key));
         }
 
         String status = (String) params.get("status");
-        if(!StringUtils.isEmpty(status)){
+        if (!StringUtils.isEmpty(status)) {
             wrapper.eq("publish_status", status);
         }
 
         String brandId = (String) params.get("brandId");
-        if(!StringUtils.isEmpty(brandId) && !"0".equalsIgnoreCase(brandId)){
+        if (!StringUtils.isEmpty(brandId) && !"0".equalsIgnoreCase(brandId)) {
             wrapper.eq("brand_id", brandId);
         }
 
         String catelogId = (String) params.get("catelogId");
-        if(!StringUtils.isEmpty(catelogId) && !"0".equalsIgnoreCase(catelogId)){
+        if (!StringUtils.isEmpty(catelogId) && !"0".equalsIgnoreCase(catelogId)) {
             wrapper.eq("catalog_id", catelogId);
         }
 
@@ -200,6 +208,67 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
     @Override
     public void saveBaseSpuInfo(SpuInfoEntity spuInfoEntity) {
         this.baseMapper.insert(spuInfoEntity);
+    }
+
+    @Override
+    public void up(Long spuId) {
+
+        //1.组装需要的数据
+
+        //查询sku(spu)所有可以被检索的规格属性
+        List<ProductAttrValueEntity> baseAttrs = attrValueService.baseAttrListForSpu(spuId);
+        List<Long> attrIds = baseAttrs.stream().map(attr -> attr.getAttrId()).collect(Collectors.toList());
+        List<Long> searchAttrId = attrService.selectSearchAttrs(attrIds);
+        HashSet idSet = new HashSet(searchAttrId);
+        List<SkuEsModel.Attrs> attrsList = baseAttrs.stream().filter(attr -> idSet.contains(attr.getAttrId()))
+                .map(attr -> {
+                    SkuEsModel.Attrs attrs = new SkuEsModel.Attrs();
+                    BeanUtils.copyProperties(idSet, attrs);
+                    return attrs;
+                })
+                .collect(Collectors.toList());
+
+
+        //1.查询当前spuid对应的sku，品牌
+        List<SkuInfoEntity> skus = skuInfoService.getSkusBySpuId(spuId);
+        //发送远程调用,库存系统系统查询是否有库存
+        Map<Long, Boolean> stockMap = null;
+        try {
+            //方式服务访问不到而失败
+            List<Long> skuIds = skus.stream().map(SkuInfoEntity::getSkuId).collect(Collectors.toList());
+            stockMap = wareFeignService.getSkusHasStock(skuIds).getData().stream().collect(Collectors.toMap(SkuHasStockTo::getSkuId, item -> item.getStock() > 0));
+        } catch (Exception e) {
+            log.error("查询库存服务异常:" + e);
+        }
+        //2.封装每个sku信息
+        Map<Long, Boolean> finalStockMap = stockMap;
+        List<SkuEsModel> collect = skus.stream().map(sku -> {
+            SkuEsModel esModel = new SkuEsModel();
+            BeanUtils.copyProperties(sku, esModel);
+            esModel.setSkuPrice(sku.getPrice());
+            esModel.setSkuImg(sku.getSkuDefaultImg());
+            //查询是否有库存
+            if (finalStockMap == null) {
+                esModel.setHasStock(true);
+            } else {
+                esModel.setHasStock(finalStockMap.get(esModel.getSkuId()));
+            }
+            //TODO 2.热度评分. 默认 0
+            esModel.setHotScore(0L);
+            //品牌名称 分类
+            BrandEntity brand = brandService.getById(esModel.getBrandId());
+            esModel.setBrandName(brand.getName());
+            esModel.setBrandImg(brand.getLogo());
+            CategoryEntity category = categoryService.getById(esModel.getCatalogId());
+            esModel.setCatalogName(category.getName());
+
+            //设置属性列表
+            esModel.setAttrs(attrsList);
+            return esModel;
+        }).collect(Collectors.toList());
+
+
+        //TODO 数据发给es
     }
 
 
