@@ -1,5 +1,6 @@
 package cn.nicenan.mahumall.product.service.impl;
 
+import cn.nicenan.mahumall.common.constant.ProductConstant;
 import cn.nicenan.mahumall.common.to.SkuHasStockTo;
 import cn.nicenan.mahumall.common.to.SkuReductionTo;
 import cn.nicenan.mahumall.common.to.SpuBoundTo;
@@ -7,10 +8,12 @@ import cn.nicenan.mahumall.common.to.es.SkuEsModel;
 import cn.nicenan.mahumall.common.utils.R;
 import cn.nicenan.mahumall.product.entity.*;
 import cn.nicenan.mahumall.product.feign.CouponFeignService;
+import cn.nicenan.mahumall.product.feign.SearchFeignService;
 import cn.nicenan.mahumall.product.feign.WareFeignService;
 import cn.nicenan.mahumall.product.service.*;
 import cn.nicenan.mahumall.product.vo.*;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -46,7 +49,8 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
     private AttrService attrService;
     @Autowired
     private ProductAttrValueService attrValueService;
-
+    @Autowired
+    private SearchFeignService searchFeignService;
     @Autowired
     private SkuImagesService skuImagesService;
 
@@ -198,10 +202,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
             wrapper.eq("catalog_id", catelogId);
         }
 
-        IPage<SpuInfoEntity> page = this.page(
-                new Query<SpuInfoEntity>().getPage(params),
-                wrapper
-        );
+        IPage<SpuInfoEntity> page = this.page(new Query<SpuInfoEntity>().getPage(params), wrapper);
         return new PageUtils(page);
     }
 
@@ -220,13 +221,11 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         List<Long> attrIds = baseAttrs.stream().map(attr -> attr.getAttrId()).collect(Collectors.toList());
         List<Long> searchAttrId = attrService.selectSearchAttrs(attrIds);
         HashSet idSet = new HashSet(searchAttrId);
-        List<SkuEsModel.Attrs> attrsList = baseAttrs.stream().filter(attr -> idSet.contains(attr.getAttrId()))
-                .map(attr -> {
-                    SkuEsModel.Attrs attrs = new SkuEsModel.Attrs();
-                    BeanUtils.copyProperties(idSet, attrs);
-                    return attrs;
-                })
-                .collect(Collectors.toList());
+        List<SkuEsModel.Attrs> attrsList = baseAttrs.stream().filter(attr -> idSet.contains(attr.getAttrId())).map(attr -> {
+            SkuEsModel.Attrs attrs = new SkuEsModel.Attrs();
+            BeanUtils.copyProperties(attr, attrs);
+            return attrs;
+        }).collect(Collectors.toList());
 
 
         //1.查询当前spuid对应的sku，品牌
@@ -236,7 +235,8 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
         try {
             //方式服务访问不到而失败
             List<Long> skuIds = skus.stream().map(SkuInfoEntity::getSkuId).collect(Collectors.toList());
-            stockMap = wareFeignService.getSkusHasStock(skuIds).getData().stream().collect(Collectors.toMap(SkuHasStockTo::getSkuId, item -> item.getStock() > 0));
+            stockMap = wareFeignService.getSkusHasStock(skuIds).getData(new TypeReference<>() {
+            }).stream().collect(Collectors.toMap(SkuHasStockTo::getSkuId, item -> item.getStock() > 0));
         } catch (Exception e) {
             log.error("查询库存服务异常:" + e);
         }
@@ -269,6 +269,15 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
 
 
         //TODO 数据发给es
+        R r = searchFeignService.productStatusUp(collect);
+        if (r.getCode() == 0) {
+            //远程调用成功 改变spu状态
+            baseMapper.updateSpuStatus(spuId, ProductConstant.StatusEnum.UP_SPU.getCode());
+        } else {
+//TODO 远程调用失败 重复调用？接口幂等性,重试机制
+
+
+        }
     }
 
 

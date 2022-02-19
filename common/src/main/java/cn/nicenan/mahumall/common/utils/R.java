@@ -9,6 +9,8 @@
 package cn.nicenan.mahumall.common.utils;
 
 import cn.nicenan.mahumall.common.exception.BizCodeEnume;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
 
 import java.util.HashMap;
@@ -16,23 +18,32 @@ import java.util.Map;
 
 /**
  * 返回数据
+ * R 继承了 HashMap 则不能继续使用泛型数据了 必须全是hashMap数据
  *
  * @author Mark sunlightcs@gmail.com
  */
 public class R<T> extends HashMap<String, Object> {
     private static final long serialVersionUID = 1L;
-    private T data;
 
-    public T getData() {
-        return data;
+    /**
+     * 复杂类型转换 TypeReference
+     */
+    public T getData(TypeReference<T> typeReference) {
+        // get("data") 默认是map类型 所以再由map转成string再转json
+        Object data = get("data");
+        ObjectMapper objectMapper = new ObjectMapper();
+        try {
+
+            T t = objectMapper.readValue(objectMapper.writeValueAsString(data), typeReference);
+            return t;
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
-    public void setData(T data) {
-        this.data = data;
-    }
-
-    public R(T data) {
-        this.data = data;
+    public R setData(T data) {
+        put("data", data);
+        return this;
     }
 
     public R() {

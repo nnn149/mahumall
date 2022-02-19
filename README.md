@@ -20,6 +20,10 @@
      *          1、@FeignClient("mahumall-product")
      *          2、/product/skuinfo/info/{skuId}
 ```
+Feign调用流程
+1. 构造请求数据，转成json
+2. 发送请求
+3. 执行请求重试机制。默认关闭
 [feign远程调用](member/src/main/java/cn/nicenan/mahumall/member/feign/CouponFeignService.java)
 
 [JSR303 校验](product/src/main/java/cn/nicenan/mahumall/product/entity/BrandEntity.java)

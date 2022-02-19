@@ -1,12 +1,12 @@
 package cn.nicenan.mahumall.search;
 
 import cn.nicenan.mahumall.search.config.MahumallElasticSearchConfig;
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import lombok.Data;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.ElasticsearchClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
@@ -23,16 +23,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.json.Json;
-import javax.xml.transform.Source;
 import java.io.IOException;
 
 @SpringBootTest
 class SearchApplicationTests {
     @Autowired
     private RestHighLevelClient client;
-    @Autowired
-    private ElasticsearchClient client2;
+
 
     @Test
     void contextLoads() {

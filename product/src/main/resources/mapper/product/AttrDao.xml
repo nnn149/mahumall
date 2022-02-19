@@ -20,6 +20,7 @@
         <foreach collection="attrIds" item="id" separator="," open="(" close=")">
             #{id}
         </foreach>
+        AND search_type = 1
     </select>
 
 
