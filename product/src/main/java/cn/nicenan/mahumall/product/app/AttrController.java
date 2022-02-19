@@ -1,8 +1,7 @@
-package cn.nicenan.mahumall.product.controller;
+package cn.nicenan.mahumall.product.app;
 
 import cn.nicenan.mahumall.common.utils.PageUtils;
 import cn.nicenan.mahumall.common.utils.R;
-import cn.nicenan.mahumall.product.entity.AttrEntity;
 import cn.nicenan.mahumall.product.entity.ProductAttrValueEntity;
 import cn.nicenan.mahumall.product.service.AttrService;
 import cn.nicenan.mahumall.product.service.ProductAttrValueService;

@@ -1,4 +1,4 @@
-package cn.nicenan.mahumall.product.controller;
+package cn.nicenan.mahumall.product.app;
 
 import cn.nicenan.mahumall.common.utils.PageUtils;
 import cn.nicenan.mahumall.common.utils.R;

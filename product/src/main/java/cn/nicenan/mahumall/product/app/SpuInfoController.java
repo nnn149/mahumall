@@ -1,4 +1,4 @@
-package cn.nicenan.mahumall.product.controller;
+package cn.nicenan.mahumall.product.app;
 
 import java.util.Arrays;
 import java.util.Map;
