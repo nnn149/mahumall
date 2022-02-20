@@ -44,3 +44,11 @@ spring:
           filters:
             # 重写路径，按照renren-fast的路径规则
             - RewritePath=/api/?(?<segment>.*), /renren-fast/$\{segment}
+
+        #nginx反代商城首页
+        - id: host_route
+          #lb负载均衡，注册中心内服务名（项目名）
+          uri: lb://mahumall-product
+          # host为 xx.xx.mahumall.com多级域名都可以访问
+          predicates:
+            - Host=**.mahumall.com

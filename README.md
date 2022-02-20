@@ -1,9 +1,12 @@
 # mahumall
+
 马户商城
 
 
 [nacos配置中心](coupon/src/main/java/cn/nicenan/mahumall/coupon/controller/CouponController.java)
-##### nacos注册
+
+### nacos注册
+
 1.配置文件内给应用起名字和设置nacos server地址
 2.Application内开启访问注册与发现功能 @EnableDiscoveryClient
 
@@ -12,6 +15,7 @@
 [geteway例子](gateway/src/main/resources/application.yml)
 
 ### feign
+
 ```text
      *   1)、让所有请求过网关；
      *          1、@FeignClient("mahumall-gateway")：mahumall-gateway所在的机器发请求
@@ -30,7 +34,10 @@ Feign调用流程
 
 [api文档](https://easydoc.net/s/78237135/ZUqEdvA4/hKJTcbfd)
 
-##### 商品系统平台属性
+### 业务逻辑
+
+#### 商品系统平台属性
+
 规格参数和属性分组有关联 (pms_attr_attrgroup_relation)和 销售属性公用代码，都是商品属性(pms_attr)
 规格参数是指商品详情页的参数：比如有(属性分组) 主体:上市月份，品牌 基本信息： 长度,宽度,厚度 屏幕：材质类型,尺寸
 属性分组有类别
@@ -38,6 +45,7 @@ Feign调用流程
 参考jd
 
 #### 库存采购
+
 先生成采购单，再添加采购需求
 由人工或者系统低库存自动预警生成
 采购需求合并成采购单(人工合并，系统定时合并)
@@ -89,3 +97,46 @@ http://192.168.2.211:5601/app/dev_tools#/console
 采用倒排索引，分词存储
 
 查询对象语言 QueryDSL
+
+
+
+## Nginx
+
+
+
+### 域名指向虚拟机
+
+p130 修改系统Hosts 指定域名到虚拟机IP，使用域名访问虚拟机web服务
+
+可能域名无法访问，看虚拟机内网卡是否获取了多个ip，hosts设置其他ip。关闭本机代理 ,刷新dns `ipconfig -flushdns` `chrome://net-internals/#sockets`
+
+关闭 apache2 `/etc/init.d/apache2 stop` or `update-rc.d -f apache2 remove`
+
+### 流程
+
+1. Nginx的http块指定上游地址 upstream mahumall {}
+2. 反代地址`proxy_pass http://mahumall;`
+3. Nginx添加Host信息 `proxy_set_header Host $host;`
+4. 网关配置文件在最后加上根据Host断言到商品服务
+
+
+
+### 动静分离
+
+静态资源都放到Nginx内，规则 /static/** 所有的请求都由nginx直接返回
+
+1. 静态资源放到Nginx的html/static目录
+2. 修改Nginx配置 `location /static/`内的 `root /usr/share/nginx/html;`
+3. 页面的请求路径都加上static路径
+
+## 压力测试
+
+### JMeter
+
+https://jmeter.apache.org/download_jmeter.cgi
+
+1. 添加测试计划
+2. 添加线程组
+3. 添加取样器-http请求
+4. 添加监听器的前三个
+
