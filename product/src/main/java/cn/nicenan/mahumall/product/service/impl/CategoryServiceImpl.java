@@ -6,6 +6,7 @@ import cn.nicenan.mahumall.product.dao.CategoryDao;
 import cn.nicenan.mahumall.product.entity.CategoryEntity;
 import cn.nicenan.mahumall.product.service.CategoryBrandRelationService;
 import cn.nicenan.mahumall.product.service.CategoryService;
+import cn.nicenan.mahumall.product.vo.Catelog2Vo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -69,6 +70,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
 
     /**
      * 级联更新所有关联的数据
+     *
      * @param category
      */
     @Transactional
@@ -76,6 +78,45 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
     public void updateCascade(CategoryEntity category) {
         updateById(category);
         categoryBrandRelationService.updateCategory(category.getCatId(), category.getName());
+    }
+
+    @Override
+    public List<CategoryEntity> getLevel1Categorys() {
+        return baseMapper.selectList(new QueryWrapper<CategoryEntity>().eq("parent_cid", 0));
+    }
+
+    @Override
+    public Map<Long, List<Catelog2Vo>> getCatalogJson() {
+        //1.查出所有一级分类
+        List<CategoryEntity> level1Categorys = getLevel1Categorys();
+        //2.封装数据
+        Map<Long, List<Catelog2Vo>> listMap = level1Categorys.stream().collect(Collectors.toMap(CategoryEntity::getCatId, level1 -> {
+            //2.1查出所有二级分类
+            List<CategoryEntity> categoryEntities = baseMapper.selectList(new QueryWrapper<CategoryEntity>().eq("parent_cid", level1.getCatId()));
+            List<Catelog2Vo> catelog2Vos = null;
+            if (categoryEntities.size() > 0) {
+                catelog2Vos = categoryEntities.stream().map(level2 -> {
+                    Catelog2Vo catelog2Vo =
+                            new Catelog2Vo(level2.getCatId().toString(),
+                                    level2.getName(),
+                                    level2.getParentCid().toString(),
+                                    null
+                            );
+                    //2.2查出所有三级分类
+                    List<CategoryEntity> level3Categorys = baseMapper.selectList(new QueryWrapper<CategoryEntity>().eq("parent_cid", level2.getCatId()));
+                    if (level3Categorys != null && level3Categorys.size() > 0) {
+                        List<Catelog2Vo.Catalog3Vo> catalog3Vos = level3Categorys.stream().map(level3 -> {
+                            Catelog2Vo.Catalog3Vo catalog3Vo = new Catelog2Vo.Catalog3Vo(level3.getCatId().toString(), level3.getName(), level3.getParentCid().toString());
+                            return catalog3Vo;
+                        }).collect(Collectors.toList());
+                        catelog2Vo.setCatalog3List(catalog3Vos);
+                    }
+                    return catelog2Vo;
+                }).collect(Collectors.toList());
+            }
+            return catelog2Vos;
+        }));
+        return listMap;
     }
 
     private List<Long> findParentPath(Long catelogId, List<Long> path) {

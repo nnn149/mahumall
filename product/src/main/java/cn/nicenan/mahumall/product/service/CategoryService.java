@@ -1,5 +1,6 @@
 package cn.nicenan.mahumall.product.service;
 
+import cn.nicenan.mahumall.product.vo.Catelog2Vo;
 import com.baomidou.mybatisplus.extension.service.IService;
 import cn.nicenan.mahumall.common.utils.PageUtils;
 import cn.nicenan.mahumall.product.entity.CategoryEntity;
@@ -25,5 +26,9 @@ public interface CategoryService extends IService<CategoryEntity> {
     Long[] findCatelogPath(Long catelogId);
 
     void updateCascade(CategoryEntity category);
+
+    List<CategoryEntity> getLevel1Categorys();
+
+    Map<Long, List<Catelog2Vo>> getCatalogJson();
 }
 
