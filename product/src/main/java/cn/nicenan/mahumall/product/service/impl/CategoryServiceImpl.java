@@ -9,12 +9,18 @@ import cn.nicenan.mahumall.product.service.CategoryService;
 import cn.nicenan.mahumall.product.vo.Catelog2Vo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
@@ -23,6 +29,10 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
 
     @Autowired
     private CategoryBrandRelationService categoryBrandRelationService;
+    @Autowired
+    StringRedisTemplate redisTemplate;
+    @Autowired
+    ObjectMapper objectMapper;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -88,8 +98,24 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
     @Override
     public Map<Long, List<Catelog2Vo>> getCatalogJson() {
 
-        List<CategoryEntity> categoryEntityList = baseMapper.selectList(null);
+        try {
+            String json = redisTemplate.opsForValue().get("catalogJson");
+            if (StringUtils.isEmpty(json)) {
+                //1.加入缓存
+                Map<Long, List<Catelog2Vo>> jsonFromDb = getCatalogJsonFromDb();
+                json = objectMapper.writeValueAsString(jsonFromDb);
+                redisTemplate.opsForValue().set("catalogJson", json,1, TimeUnit.DAYS);
+            }
+            return objectMapper.readValue(json, new TypeReference<>() {
+            });
+        } catch (Exception ex) {
+            log.error("获取分类json失败", ex);
+        }
+        return null;
+    }
 
+    public Map<Long, List<Catelog2Vo>> getCatalogJsonFromDb() {
+        List<CategoryEntity> categoryEntityList = baseMapper.selectList(null);
         //1.查出所有一级分类
         List<CategoryEntity> level1Categorys = getParent_cid(categoryEntityList, 0L);
         //2.封装数据

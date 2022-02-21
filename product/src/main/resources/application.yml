@@ -13,10 +13,13 @@ spring:
     date-format: yyyy-MM-dd HH:mm:ss
   thymeleaf:
     cache: false
+  redis:
+    host: 192.168.2.211
+    port: 6379
 mybatis-plus:
   mapper-locations: classpath:/mapper/**/*.xml
-#  configuration:
-#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl #开启sql日志
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl #开启sql日志
   global-config:
     db-config:
       id-type: auto
@@ -26,4 +29,4 @@ server:
   port: 10000
 logging:
   level:
-    cn.nicenan.mahumall: error
+    cn.nicenan.mahumall: info
