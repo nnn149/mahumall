@@ -87,12 +87,15 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
 
     @Override
     public Map<Long, List<Catelog2Vo>> getCatalogJson() {
+
+        List<CategoryEntity> categoryEntityList = baseMapper.selectList(null);
+
         //1.查出所有一级分类
-        List<CategoryEntity> level1Categorys = getLevel1Categorys();
+        List<CategoryEntity> level1Categorys = getParent_cid(categoryEntityList, 0L);
         //2.封装数据
         Map<Long, List<Catelog2Vo>> listMap = level1Categorys.stream().collect(Collectors.toMap(CategoryEntity::getCatId, level1 -> {
             //2.1查出所有二级分类
-            List<CategoryEntity> categoryEntities = baseMapper.selectList(new QueryWrapper<CategoryEntity>().eq("parent_cid", level1.getCatId()));
+            List<CategoryEntity> categoryEntities = getParent_cid(categoryEntityList, level1.getCatId());
             List<Catelog2Vo> catelog2Vos = null;
             if (categoryEntities.size() > 0) {
                 catelog2Vos = categoryEntities.stream().map(level2 -> {
@@ -103,7 +106,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
                                     null
                             );
                     //2.2查出所有三级分类
-                    List<CategoryEntity> level3Categorys = baseMapper.selectList(new QueryWrapper<CategoryEntity>().eq("parent_cid", level2.getCatId()));
+                    List<CategoryEntity> level3Categorys = getParent_cid(categoryEntityList, level2.getCatId());
                     if (level3Categorys != null && level3Categorys.size() > 0) {
                         List<Catelog2Vo.Catalog3Vo> catalog3Vos = level3Categorys.stream().map(level3 -> {
                             Catelog2Vo.Catalog3Vo catalog3Vo = new Catelog2Vo.Catalog3Vo(level3.getCatId().toString(), level3.getName(), level3.getParentCid().toString());
@@ -117,6 +120,10 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
             return catelog2Vos;
         }));
         return listMap;
+    }
+
+    private List<CategoryEntity> getParent_cid(List<CategoryEntity> categoryEntities, Long parent_cid) {
+        return categoryEntities.stream().filter(categoryEntity -> categoryEntity.getParentCid().equals(parent_cid)).collect(Collectors.toList());
     }
 
     private List<Long> findParentPath(Long catelogId, List<Long> path) {
