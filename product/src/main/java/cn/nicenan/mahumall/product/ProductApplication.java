@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableDiscoveryClient
 @SpringBootApplication
 @EnableTransactionManagement
-@EnableCaching
 @EnableFeignClients(basePackages = "cn.nicenan.mahumall.product.feign")
 public class ProductApplication {
 
