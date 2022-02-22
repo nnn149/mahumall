@@ -449,3 +449,10 @@ cannal模拟一个mysql 从客户端，接受主mysql的binlog来解析操作，
 双写模式：更新操作有返回值加上@Cacheable或@CachePut更新缓存
 
 失效模式：更新操作无返回值加上@CacheEvict删除缓存
+
+
+
+## 坑
+
+Feign调用是泛型消失，对象变成LinkedHashMap。使用jackson反序列化为对象时，可能远程和本地的对象属性不一致，设置`objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);`忽略不存在的属性。[R.java](common/src/main/java/cn/nicenan/mahumall/common/utils/R.java)
+
