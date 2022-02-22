@@ -58,9 +58,9 @@ Feign调用流程
 mysql默认隔离级别是可重复读，调试的时候改成 未提交读 Read uncommitted 方便查询
 `SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;`
 
-### Elasticsearch
+## Elasticsearch
 
-#### Docker安装
+### Docker安装
 
 ```bash
 mkdir -p /root/elasticsearch/config
@@ -97,6 +97,64 @@ http://192.168.2.211:5601/app/dev_tools#/console
 采用倒排索引，分词存储
 
 查询对象语言 QueryDSL
+
+java代码内最好用常量来使用index，方便以后数据迁移的时候
+
+### query 查询
+
+should增加评分不改变结果
+
+bool复合查询，需要全文匹配(分词器)条件写到bool的must的match里面， must里面的会有评分。不需要评分的写到bool的filter的term。更快一点
+
+term：查询某个字段里含有某个关键词的文档，terms：查询某个字段里含有多个关键词的文档
+
+嵌入式的查询需要外面加一层nested指定path 
+
+sort排序
+
+from size 分页
+
+highlight高亮
+
+```json
+"highlight": {
+    "fields": {
+      "skuTitle": {}
+    },
+    "pre_tags": "<b style='color:red'>",
+    "post_tags": "</b>"
+  }
+```
+
+###  aggs聚合分析
+
+聚合里面可以子聚合，用上一次的数据。嵌入式聚合也得用嵌入式的
+
+```json
+#聚合分析
+GET product2/_search
+{"query":{"match_all":{}},"aggs":{"brand_agg":{"terms":{"field":"brandId","size":10},"aggs":{"brand_name_agg":{"terms":{"field":"brandName","size":10}},"brand_img_agg":{"terms":{"field":"brandImg","size":10}}}},"catalog_agg":{"terms":{"field":"catalogId","size":10},"aggs":{"catalog_name_agg":{"terms":{"field":"catalogName","size":10}}}},"attr_agg":{"nested":{"path":"attrs"},"aggs":{"attr_id_agg":{"terms":{"field":"attrs.attrId","size":10},"aggs":{"attr_name_agg":{"terms":{"field":"attrs.attrName","size":10}},"attr_value_agg":{"terms":{"field":"attrs.attrValue","size":10}}}}}}}}
+```
+
+
+
+### 改映射 mapping
+
+需要用数据迁移。
+
+新建一个index
+
+```json
+POST _reindex
+{
+  "source": {
+    "index": "product"
+  },
+  "dest": {
+    "index": "product2"
+  }
+}
+```
 
 
 
@@ -158,7 +216,7 @@ https://visualvm.github.io/download.html
 
 业务逻辑无法优化（不要循环查表），需要经常访问且变动较少的查询（商品数据）（**多读少写**）。**及时性**（物流信息），**数据一致性**（商品分类）要求不高的数据
 
-### 路径
+### 缓存流程
 
 1. 请求
 2. 读取缓存中数据
@@ -245,7 +303,7 @@ end
 
 
 
-##### redisson
+##### Redisson分布式锁框架
 
 [文档](https://github.com/redisson/redisson/wiki/Table-of-Content)
 
@@ -363,13 +421,31 @@ cannal模拟一个mysql 从客户端，接受主mysql的binlog来解析操作，
 
 引入pom，可以看下都自动配置了什么 `CacheAutoConfiguration`->`RedisCacheAutoConfiguration` 自动配好了CacheManager 。
 
+自定义配置：[MyCacheConfig.java](product/src/main/java/cn/nicenan/mahumall/product/config/MyCacheConfig.java)
+
+#### 注解
+
 @Cacheable  triggers cache population： 触发将数据保存到缓存的操作
 @CacheEvict  triggers cache eviction：  触发将数据从缓存删除的操作
 @CachePut  updates the cache without interfering with the method execution：不影响方法执行更新缓存
 @Caching   regroups multiple cache operations to be applied on a method：组合上面多个操作
 @CacheConfig  shares some common cache-related settings at class-level：在类级别，共享缓存配置
 
-1. @EnableCaching 开启缓存
+1. Application或Configuration 使用 @EnableCaching 开启缓存
 2. 使用注解开启缓存@Cacheable
    1. 代表当前方法的结果需要缓存，如果缓存中有，则方法不调用。如果缓存中没有，会调用方法，最后将结果放入缓存。
-   2. 需要指定放到哪个名字的缓存(缓存的分区，推荐按业务类型分)
+   2. 缓存的value值，默认使用jdk序列化机制
+   3. 可以指定key的生成规则(spel表达式)
+   4. 默认ttl时间-1,永不过期
+   5. 需要指定放到哪个名字的缓存(缓存的分区，推荐按业务类型分)
+   6. 指定sync=true以同步模式运行，防止缓存击穿。本地锁，不是分布式锁
+3. 使用注解删除缓存@CacheEvict 
+   1. 指定value和key删除某个分区下key的缓存
+   2. 指定value和allEntries = true删除分区下全部缓存
+   3. @Caching 组合删除多个key的缓存
+
+对**数据有修改**可以使用
+
+双写模式：更新操作有返回值加上@Cacheable或@CachePut更新缓存
+
+失效模式：更新操作无返回值加上@CacheEvict删除缓存
