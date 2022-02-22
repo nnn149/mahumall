@@ -452,6 +452,56 @@ cannal模拟一个mysql 从客户端，接受主mysql的binlog来解析操作，
 
 
 
+## 异步&线程池
+
+初始化线程的四种方式
+
+1. 继承Thread ->  new xxx().start()
+2. 实现Runnable接口->   new Thread(new xxx()).start()
+3. 实现Callable接口+FutureTask（可拿到返回结果，可处理异常）
+   1. new Thread(new FuterTask<String>(new Callable01())).start()   xxxFuter.get()阻塞等待线程完成获取返回值 
+4. **线程池**
+   1. 给线程池直接提交任务
+   2. 业务代码里面只用线程池，上面三种都不用
+   3. 可以控制资源，性能稳定
+   4. 系统里有一两个线程池（核心业务，非核心业务（灵活关闭线程池）），每个异步任务提交给线程池用
+
+
+
+### 线程池
+
+### #七大参数
+
+1. **corePoolSize**: 核心线程数。刚创建好线程池的时候是没有可用线程的，懒加载。核心线程数，线程会一直存活
+2. **maximumPoolSize**: 最大线程数量，总线程数（包括核心线程）。控制资源，队列满后开新线程，会被自动释放
+3. keepAliveTime: 非核心空闲线程存活时间。时间到后 (maximumPoolSize-corePoolSize) 这些线程释放
+   1. 如果设置了allowCoreThreadTimeOut =true 核心线程也会超时关闭
+4. unit: 存活时间单位
+5. **BlockingQueue** <Runnable> workQueue:阻塞队列。如果线程超过核心线程数，会**先将任务放到队列中**
+   1. 线程池创建线程需要获取mainlock这个全局锁，影响并发效率，阻塞队列可以很好的缓冲。
+   2. 阻塞队列大小默认int最大值，最高根据业务自己设置
+6. threadFactory: 线程的创建工程。一般默认，可以自定义线程名字
+7. handler: 当线程数到达最大线程并且队列满了，按照我们指定的拒绝策略拒绝执行任务
+   1. 默认丢弃策略
+   2. 如果不想抛弃，可以使用CallerRunsPolicy 同步执行
+
+> 一个线程池 core 7； max 20 ，queue：50，100 并发进来怎么分配的； 先有 7 个能直接得到执行，接下来 50 个进入队列排队，在多开 13 个继续执行。现在 70 个 被安排上了。剩下 30 个默认拒绝策
+
+
+
+#### 4 种线程池
+
+1. newCachedThreadPool
+   1. 核心数量为0，可以缓存的线程池，可灵活回收所有空闲线程，若无可回收，则新建线程。
+2. newFixedThreadPool
+   1. 固定核心数量大小，都不可回收
+3. newScheduledThreadPool
+   1. 做定时任务的线程池
+4. newSingleThreadExecutor
+   1. 核心数量0 单线程化的线程池，它只会用唯一的工作线程来执行任务，保证所有任务 按照指定顺序(FIFO, LIFO, 优先级)执行。
+
+#### CompletableFuture 异步编排
+
 ## 坑
 
 Feign调用是泛型消失，对象变成LinkedHashMap。使用jackson反序列化为对象时，可能远程和本地的对象属性不一致，设置`objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);`忽略不存在的属性。[R.java](common/src/main/java/cn/nicenan/mahumall/common/utils/R.java)
