@@ -2,12 +2,13 @@ package cn.nicenan.mahumall.search.controller;
 
 import cn.nicenan.mahumall.search.service.MallSearchService;
 import cn.nicenan.mahumall.search.vo.SearchParam;
+import cn.nicenan.mahumall.search.vo.SearchResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
-import javax.naming.directory.SearchResult;
+
 import javax.servlet.http.HttpServletRequest;
 
 @Controller

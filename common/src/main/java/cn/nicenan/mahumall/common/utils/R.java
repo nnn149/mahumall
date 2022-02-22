@@ -10,6 +10,7 @@ package cn.nicenan.mahumall.common.utils;
 
 import cn.nicenan.mahumall.common.exception.BizCodeEnume;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpStatus;
 
@@ -32,6 +33,7 @@ public class R<T> extends HashMap<String, Object> {
         // get("data") 默认是map类型 所以再由map转成string再转json
         Object data = get("data");
         ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         try {
 
             T t = objectMapper.readValue(objectMapper.writeValueAsString(data), typeReference);

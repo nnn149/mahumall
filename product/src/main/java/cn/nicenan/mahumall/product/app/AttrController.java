@@ -63,8 +63,9 @@ public class AttrController {
     //@RequiresPermissions("product:attr:info")
     public R info(@PathVariable("attrId") Long attrId) {
         AttrRespVo attrRespVo = attrService.getAttrInfo(attrId);
-        return R.ok().put("attr", attrRespVo);
+        return R.ok().put("attr", attrRespVo).setData(attrRespVo);
     }
+
     @PostMapping("/update/{spuId}")
     public R updateSpiAttr(@PathVariable("spuId") Long spuId, @RequestBody List<ProductAttrValueEntity> entities){
         productAttrValueService.updateSpuAttr(spuId, entities);

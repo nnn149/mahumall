@@ -1,8 +1,8 @@
 package cn.nicenan.mahumall.search.service;
 
 import cn.nicenan.mahumall.search.vo.SearchParam;
+import cn.nicenan.mahumall.search.vo.SearchResult;
 
-import javax.naming.directory.SearchResult;
 
 public interface MallSearchService {
     /**
