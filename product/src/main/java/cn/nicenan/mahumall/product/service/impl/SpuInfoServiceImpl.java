@@ -236,7 +236,7 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
             //方式服务访问不到而失败
             List<Long> skuIds = skus.stream().map(SkuInfoEntity::getSkuId).collect(Collectors.toList());
             stockMap = wareFeignService.getSkusHasStock(skuIds).getData(new TypeReference<>() {
-            }).stream().collect(Collectors.toMap(SkuHasStockTo::getSkuId, item -> item.getStock() > 0));
+            }).stream().collect(Collectors.toMap(SkuHasStockTo::getSkuId, item -> item.getStock() != null && item.getStock() > 0));
         } catch (Exception e) {
             log.error("查询库存服务异常:" + e);
         }
@@ -251,7 +251,11 @@ public class SpuInfoServiceImpl extends ServiceImpl<SpuInfoDao, SpuInfoEntity> i
             if (finalStockMap == null) {
                 esModel.setHasStock(true);
             } else {
-                esModel.setHasStock(finalStockMap.get(esModel.getSkuId()));
+                if (finalStockMap.get(esModel.getSkuId()) == null) {
+                    esModel.setHasStock(false);
+                } else {
+                    esModel.setHasStock(finalStockMap.get(esModel.getSkuId()));
+                }
             }
             //TODO 2.热度评分. 默认 0
             esModel.setHotScore(0L);
