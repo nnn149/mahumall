@@ -14,6 +14,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -84,6 +85,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
      *
      * @param category
      */
+    @CacheEvict(value = {"category"}, allEntries = true)
     @Transactional
     @Override
     public void updateCascade(CategoryEntity category) {
@@ -98,8 +100,8 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         return baseMapper.selectList(new QueryWrapper<CategoryEntity>().eq("parent_cid", 0));
     }
 
-    @Override
-    public Map<Long, List<Catelog2Vo>> getCatalogJson() {
+
+    public Map<Long, List<Catelog2Vo>> getCatalogJsonOld() {
         try {
             String json = redisTemplate.opsForValue().get("catalogJson");
             if (StringUtils.isEmpty(json)) {
@@ -115,6 +117,35 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         }
         return null;
     }
+
+    @Cacheable(value = "category", key = "#root.methodName")
+    @Override
+    public Map<String, List<Catelog2Vo>> getCatalogJson() {
+        List<CategoryEntity> entityList = baseMapper.selectList(null);
+        // 查询所有一级分类
+        List<CategoryEntity> level1 = getParent_cid(entityList, 0L);
+        Map<String, List<Catelog2Vo>> parent_cid = level1.stream().collect(Collectors.toMap(k -> k.getCatId().toString(), v -> {
+            // 拿到每一个一级分类 然后查询他们的二级分类
+            List<CategoryEntity> entities = getParent_cid(entityList, v.getCatId());
+            List<Catelog2Vo> catelog2Vos = null;
+            if (entities != null) {
+                catelog2Vos = entities.stream().map(l2 -> {
+                    Catelog2Vo catelog2Vo = new Catelog2Vo(v.getCatId().toString(), l2.getName(), l2.getCatId().toString(), null);
+                    // 找当前二级分类的三级分类
+                    List<CategoryEntity> level3 = getParent_cid(entityList, l2.getCatId());
+                    // 三级分类有数据的情况下
+                    if (level3 != null) {
+                        List<Catelog2Vo.Catalog3Vo> catalog3Vos = level3.stream().map(l3 -> new Catelog2Vo.Catalog3Vo(l3.getCatId().toString(), l3.getName(), l2.getCatId().toString())).collect(Collectors.toList());
+                        catelog2Vo.setCatalog3List(catalog3Vos);
+                    }
+                    return catelog2Vo;
+                }).collect(Collectors.toList());
+            }
+            return catelog2Vos;
+        }));
+        return parent_cid;
+    }
+
 
     public Map<Long, List<Catelog2Vo>> getCatalogJsonFromDb() {
         //查出所有分类
