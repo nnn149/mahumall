@@ -363,13 +363,31 @@ cannal模拟一个mysql 从客户端，接受主mysql的binlog来解析操作，
 
 引入pom，可以看下都自动配置了什么 `CacheAutoConfiguration`->`RedisCacheAutoConfiguration` 自动配好了CacheManager 。
 
+自定义配置：[MyCacheConfig.java](product/src/main/java/cn/nicenan/mahumall/product/config/MyCacheConfig.java)
+
+#### 注解
+
 @Cacheable  triggers cache population： 触发将数据保存到缓存的操作
 @CacheEvict  triggers cache eviction：  触发将数据从缓存删除的操作
 @CachePut  updates the cache without interfering with the method execution：不影响方法执行更新缓存
 @Caching   regroups multiple cache operations to be applied on a method：组合上面多个操作
 @CacheConfig  shares some common cache-related settings at class-level：在类级别，共享缓存配置
 
-1. @EnableCaching 开启缓存
+1. Application或Configuration 使用 @EnableCaching 开启缓存
 2. 使用注解开启缓存@Cacheable
    1. 代表当前方法的结果需要缓存，如果缓存中有，则方法不调用。如果缓存中没有，会调用方法，最后将结果放入缓存。
-   2. 需要指定放到哪个名字的缓存(缓存的分区，推荐按业务类型分)
+   2. 缓存的value值，默认使用jdk序列化机制
+   3. 可以指定key的生成规则(spel表达式)
+   4. 默认ttl时间-1,永不过期
+   5. 需要指定放到哪个名字的缓存(缓存的分区，推荐按业务类型分)
+   6. 指定sync=true以同步模式运行，防止缓存击穿。本地锁，不是分布式锁
+3. 使用注解删除缓存@CacheEvict 
+   1. 指定value和key删除某个分区下key的缓存
+   2. 指定value和allEntries = true删除分区下全部缓存
+   3. @Caching 组合删除多个key的缓存
+
+对**数据有修改**可以使用
+
+双写模式：更新操作有返回值加上@Cacheable或@CachePut更新缓存
+
+失效模式：更新操作无返回值加上@CacheEvict删除缓存
