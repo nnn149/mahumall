@@ -354,3 +354,22 @@ A正在修改数据，B想要读取最新数据，必须等到写锁释放。并
 4. 通过加锁保证并发，写写按顺序排队，读读不管，适用读写锁。
 
 cannal模拟一个mysql 从客户端，接受主mysql的binlog来解析操作，可以自动同步到redis
+
+
+
+### Spring Cache
+
+主要有 `CacheManager 和 Cache`两个接口。CacheManager 有很多种类比如Redis的实现，CacheManager 管理多个Cache，每个Cache定义了对缓存的增删改查。
+
+引入pom，可以看下都自动配置了什么 `CacheAutoConfiguration`->`RedisCacheAutoConfiguration` 自动配好了CacheManager 。
+
+@Cacheable  triggers cache population： 触发将数据保存到缓存的操作
+@CacheEvict  triggers cache eviction：  触发将数据从缓存删除的操作
+@CachePut  updates the cache without interfering with the method execution：不影响方法执行更新缓存
+@Caching   regroups multiple cache operations to be applied on a method：组合上面多个操作
+@CacheConfig  shares some common cache-related settings at class-level：在类级别，共享缓存配置
+
+1. @EnableCaching 开启缓存
+2. 使用注解开启缓存@Cacheable
+   1. 代表当前方法的结果需要缓存，如果缓存中有，则方法不调用。如果缓存中没有，会调用方法，最后将结果放入缓存。
+   2. 需要指定放到哪个名字的缓存(缓存的分区，推荐按业务类型分)

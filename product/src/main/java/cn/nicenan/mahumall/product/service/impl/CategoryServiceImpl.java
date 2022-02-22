@@ -14,6 +14,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -90,21 +91,22 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
         categoryBrandRelationService.updateCategory(category.getCatId(), category.getName());
     }
 
+    @Cacheable({"category"})
     @Override
     public List<CategoryEntity> getLevel1Categorys() {
+        System.out.println("查询一级菜单");
         return baseMapper.selectList(new QueryWrapper<CategoryEntity>().eq("parent_cid", 0));
     }
 
     @Override
     public Map<Long, List<Catelog2Vo>> getCatalogJson() {
-
         try {
             String json = redisTemplate.opsForValue().get("catalogJson");
             if (StringUtils.isEmpty(json)) {
                 //1.加入缓存
                 Map<Long, List<Catelog2Vo>> jsonFromDb = getCatalogJsonFromDb();
                 json = objectMapper.writeValueAsString(jsonFromDb);
-                redisTemplate.opsForValue().set("catalogJson", json,1, TimeUnit.DAYS);
+                redisTemplate.opsForValue().set("catalogJson", json, 1, TimeUnit.DAYS);
             }
             return objectMapper.readValue(json, new TypeReference<>() {
             });
@@ -115,6 +117,7 @@ public class CategoryServiceImpl extends ServiceImpl<CategoryDao, CategoryEntity
     }
 
     public Map<Long, List<Catelog2Vo>> getCatalogJsonFromDb() {
+        //查出所有分类
         List<CategoryEntity> categoryEntityList = baseMapper.selectList(null);
         //1.查出所有一级分类
         List<CategoryEntity> level1Categorys = getParent_cid(categoryEntityList, 0L);
