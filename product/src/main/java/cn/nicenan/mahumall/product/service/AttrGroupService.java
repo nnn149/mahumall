@@ -1,6 +1,7 @@
 package cn.nicenan.mahumall.product.service;
 
 import cn.nicenan.mahumall.product.vo.AttrGroupWithAttrsVo;
+import cn.nicenan.mahumall.product.vo.SpuItemAttrGroupVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 import cn.nicenan.mahumall.common.utils.PageUtils;
 import cn.nicenan.mahumall.product.entity.AttrGroupEntity;
@@ -27,5 +28,7 @@ public interface AttrGroupService extends IService<AttrGroupEntity> {
      * @return
      */
     List<AttrGroupWithAttrsVo> getattrGroupWithAttrsByCatelogId(Long catelogId);
+
+    List<SpuItemAttrGroupVo> getattrGroupWithAttrsBySpuId(Long spuId, Long catalogId);
 }
 

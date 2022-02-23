@@ -8,6 +8,8 @@ import cn.nicenan.mahumall.product.entity.AttrGroupEntity;
 import cn.nicenan.mahumall.product.service.AttrGroupService;
 import cn.nicenan.mahumall.product.service.AttrService;
 import cn.nicenan.mahumall.product.vo.AttrGroupWithAttrsVo;
+import cn.nicenan.mahumall.product.vo.SkuItemVo;
+import cn.nicenan.mahumall.product.vo.SpuItemAttrGroupVo;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -76,6 +78,14 @@ public class AttrGroupServiceImpl extends ServiceImpl<AttrGroupDao, AttrGroupEnt
             return attrGroupWithAttrsVo;
         }).collect(Collectors.toList());
         return collect;
+    }
+
+    @Override
+    public List<SpuItemAttrGroupVo> getattrGroupWithAttrsBySpuId(Long spuId, Long catalogId) {
+        //1查出当前spu对应所有属性的分组信息以及当前分组下的所有属性
+        List<SpuItemAttrGroupVo> vos = baseMapper.getAttrGroupWithAttrsBySpuId(spuId, catalogId);
+
+        return vos;
     }
 
 }
