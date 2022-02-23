@@ -51,7 +51,7 @@ spring:
           uri: lb://mahumall-product
           # host为 xx.xx.mahumall.com多级域名都可以访问
           predicates:
-            - Host=www.mahumall.com
+            - Host=www.mahumall.com,mahumall.com,item.mahumall.com
 
         #nginx反代商城搜索
         - id: host_route
