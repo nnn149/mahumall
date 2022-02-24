@@ -1,6 +1,4 @@
-# mahumall
-
-马户商城
+# 马户商土成
 
 
 [nacos配置中心](coupon/src/main/java/cn/nicenan/mahumall/coupon/controller/CouponController.java)
@@ -501,6 +499,12 @@ cannal模拟一个mysql 从客户端，接受主mysql的binlog来解析操作，
    1. 核心数量0 单线程化的线程池，它只会用唯一的工作线程来执行任务，保证所有任务 按照指定顺序(FIFO, LIFO, 优先级)执行。
 
 #### CompletableFuture 异步编排
+
+开启异步：`CompletableFuture xxFuture = CompletableFuture.runXXX(lambda,threadPool).thenXXX...`
+
+等待完成`xxFuture .allof(xxF,xxF2...).get()` 处理异常`.exceptionally`()
+
+
 
 ## 坑
 
