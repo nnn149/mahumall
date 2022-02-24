@@ -2,9 +2,11 @@ package cn.nicenan.mahumall.auth.controller;
 
 import cn.nicenan.mahumall.auth.feign.MemberFeignService;
 import cn.nicenan.mahumall.auth.feign.ThirdPartFeignService;
+import cn.nicenan.mahumall.auth.vo.UserLoginVo;
 import cn.nicenan.mahumall.auth.vo.UserRegisterVo;
 import cn.nicenan.mahumall.common.constant.AuthServerConstant;
 import cn.nicenan.mahumall.common.exception.BizCodeEnume;
+import cn.nicenan.mahumall.common.to.MemberRespTo;
 import cn.nicenan.mahumall.common.utils.R;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.mysql.cj.util.StringUtils;
@@ -17,6 +19,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,6 +52,26 @@ public class LoginController {
         redisTemplate.opsForValue().set(AuthServerConstant.SMS_CODE_CACHE_PREFIX + phone, code + "_" + System.currentTimeMillis(), 15, TimeUnit.MINUTES);
         thirdPartFeignService.sendCode(phone, code);
         return R.ok();
+    }
+
+    @PostMapping("/login")
+    public String login(UserLoginVo userLoginVo, RedirectAttributes redirectAttributes, HttpSession session) {
+        // 远程登录
+        R<MemberRespTo> r = memberFeignService.login(userLoginVo);
+        if (r.getCode() == 0) {
+            // 登录成功
+            MemberRespTo rsepVo = r.getData(new TypeReference<MemberRespTo>() {
+            });
+            session.setAttribute(AuthServerConstant.LOGIN_USER, rsepVo);
+            System.out.println("\n欢迎 [" + rsepVo.getUsername() + "] 登录");
+            return "redirect:http://mahumall.com";
+        } else {
+            HashMap<String, String> error = new HashMap<>();
+            // 获取错误信息
+            error.put("msg", String.valueOf(r.get("msg")));
+            redirectAttributes.addFlashAttribute("errors", error);
+            return "redirect:http://auth.mahumall.com/login.html";
+        }
     }
 
     /**

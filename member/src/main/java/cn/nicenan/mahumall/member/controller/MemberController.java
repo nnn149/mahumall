@@ -8,6 +8,7 @@ import cn.nicenan.mahumall.common.exception.BizCodeEnume;
 import cn.nicenan.mahumall.member.exception.PhoneExistException;
 import cn.nicenan.mahumall.member.exception.UserNameExistException;
 import cn.nicenan.mahumall.member.feign.CouponFeignService;
+import cn.nicenan.mahumall.member.vo.MemberLoginVo;
 import cn.nicenan.mahumall.member.vo.UserRegisterVo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -34,8 +35,18 @@ public class MemberController {
     @Autowired
     CouponFeignService couponFeignService;
 
+    @PostMapping("/login")
+    public R<MemberEntity> login(@RequestBody MemberLoginVo vo) {
+        MemberEntity memberEntity = memberService.login(vo);
+        if (memberEntity != null) {
+            return R.ok().setData(memberEntity);
+        } else {
+            return R.error(BizCodeEnume.LOGINACTT_PASSWORD_ERROR.getCode(), BizCodeEnume.LOGINACTT_PASSWORD_ERROR.getMsg());
+        }
+    }
+
     @PostMapping("/register")
-    public R<String> register(@RequestBody UserRegisterVo userRegisterVo){
+    public R<String> register(@RequestBody UserRegisterVo userRegisterVo) {
 
         try {
             memberService.register(userRegisterVo);

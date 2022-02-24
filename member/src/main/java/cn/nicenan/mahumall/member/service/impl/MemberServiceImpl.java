@@ -4,6 +4,7 @@ import cn.nicenan.mahumall.member.dao.MemberLevelDao;
 import cn.nicenan.mahumall.member.entity.MemberLevelEntity;
 import cn.nicenan.mahumall.member.exception.PhoneExistException;
 import cn.nicenan.mahumall.member.exception.UserNameExistException;
+import cn.nicenan.mahumall.member.vo.MemberLoginVo;
 import cn.nicenan.mahumall.member.vo.UserRegisterVo;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -80,6 +81,28 @@ public class MemberServiceImpl extends ServiceImpl<MemberDao, MemberEntity> impl
     public void checkUserName(String username) throws UserNameExistException {
         if (this.baseMapper.selectCount(new QueryWrapper<MemberEntity>().eq("username", username)) > 0) {
             throw new UserNameExistException();
+        }
+    }
+
+    @Override
+    public MemberEntity login(MemberLoginVo vo) {
+        String loginacct = vo.getLoginacct();
+        BCryptPasswordEncoder bCryptPasswordEncoder = new BCryptPasswordEncoder();
+
+        // 去数据库查询
+        MemberEntity entity = this.baseMapper.selectOne(new QueryWrapper<MemberEntity>().eq("username", loginacct).or().eq("mobile", loginacct));
+        if (entity == null) {
+            // 登录失败
+            return null;
+        } else {
+            // 前面传一个明文密码 后面传一个编码后的密码
+            boolean matches = bCryptPasswordEncoder.matches(vo.getPassword(), entity.getPassword());
+            if (matches) {
+                entity.setPassword(null);
+                return entity;
+            } else {
+                return null;
+            }
         }
     }
 }
