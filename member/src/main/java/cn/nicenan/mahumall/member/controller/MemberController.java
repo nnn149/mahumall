@@ -4,13 +4,14 @@ import java.util.Arrays;
 import java.util.Map;
 
 //import org.apache.shiro.authz.annotation.RequiresPermissions;
+import cn.nicenan.mahumall.common.exception.BizCodeEnume;
+import cn.nicenan.mahumall.member.exception.PhoneExistException;
+import cn.nicenan.mahumall.member.exception.UserNameExistException;
 import cn.nicenan.mahumall.member.feign.CouponFeignService;
+import cn.nicenan.mahumall.member.vo.MemberLoginVo;
+import cn.nicenan.mahumall.member.vo.UserRegisterVo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import cn.nicenan.mahumall.member.entity.MemberEntity;
 import cn.nicenan.mahumall.member.service.MemberService;
@@ -33,6 +34,30 @@ public class MemberController {
 
     @Autowired
     CouponFeignService couponFeignService;
+
+    @PostMapping("/login")
+    public R<MemberEntity> login(@RequestBody MemberLoginVo vo) {
+        MemberEntity memberEntity = memberService.login(vo);
+        if (memberEntity != null) {
+            return R.ok().setData(memberEntity);
+        } else {
+            return R.error(BizCodeEnume.LOGINACTT_PASSWORD_ERROR.getCode(), BizCodeEnume.LOGINACTT_PASSWORD_ERROR.getMsg());
+        }
+    }
+
+    @PostMapping("/register")
+    public R<String> register(@RequestBody UserRegisterVo userRegisterVo) {
+
+        try {
+            memberService.register(userRegisterVo);
+        } catch (PhoneExistException e) {
+            return R.error(BizCodeEnume.PHONE_EXIST_EXCEPTION.getCode(), BizCodeEnume.PHONE_EXIST_EXCEPTION.getMsg()).setData(BizCodeEnume.PHONE_EXIST_EXCEPTION.getMsg());
+        } catch (UserNameExistException e) {
+            return R.error(BizCodeEnume.USER_EXIST_EXCEPTION.getCode(), BizCodeEnume.USER_EXIST_EXCEPTION.getMsg()).setData(BizCodeEnume.USER_EXIST_EXCEPTION.getMsg());
+        }
+        return R.ok().setData("注册成功");
+    }
+
 
     @RequestMapping("/coupons")
     public R test() {
