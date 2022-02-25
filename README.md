@@ -506,6 +506,40 @@ cannal模拟一个mysql 从客户端，接受主mysql的binlog来解析操作，
 
 
 
+## 认证
+
+### OAuth2
+
+client： csdn，各种论坛等第三方应用
+
+resource owner ：用户本人
+
+Authorization Server： QQ服务器
+
+resource Server : QQ服务器
+
+用户在qq网站输入账号密码，返回一个授权码，通过授权码返回受保护信息
+
+code换access_token（一段时间多次获取不会变化），只能换一次
+
+### session一致性
+
+tomcat配置共享session
+
+hash一致性，hash请求ip，固定分配的服务器
+
+后端统一存储session,session设置到顶级域名, 使用 spring session。
+
+### 单点登录
+
+一处登录，处处可用，共享session不可行，应为域名可能不一致。
+
+1. 中央认证服务器
+2. 其他系统登录去中央认证服务器，登陆成功返回原系统
+3. 只要有一个系统登录，其他系统都登录
+
+核心原理就是第一次登录成功后cookie保存在认证服务器的域名下面，每个其它系统登录的时候跳转到认证服务器的域名进行登录，便可以单点登录
+
 ## 坑
 
 Feign调用是泛型消失，对象变成LinkedHashMap。使用jackson反序列化为对象时，可能远程和本地的对象属性不一致，设置`objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);`忽略不存在的属性。[R.java](common/src/main/java/cn/nicenan/mahumall/common/utils/R.java)
