@@ -48,10 +48,10 @@ public class SpuInfoController {
      */
     @RequestMapping("/info/{id}")
     //@RequiresPermissions("product:spuinfo:info")
-    public R info(@PathVariable("id") Long id) {
+    public R<SpuInfoEntity> info(@PathVariable("id") Long id) {
         SpuInfoEntity spuInfo = spuInfoService.getById(id);
 
-        return R.ok().put("spuInfo", spuInfo);
+        return R.ok().put("spuInfo", spuInfo).setData(spuInfo);
     }
 
     /**
