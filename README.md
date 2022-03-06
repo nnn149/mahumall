@@ -574,9 +574,15 @@ RabbitTemplate发送消息，@RabbitListener 监听消息代理发布的消息
    1. vhost：虚拟主机，一个broker里可以开设多个vhost （根据路径），用作不同用户的权限分离。
       1. Exchange：消息交换机，它指定消息按什么规则，路由到哪个队列。
       2. Binding：绑定，它的作用就是把exchange和queue按照路由规则绑定起来。
-      3. Queue：消息队列载体，每个消息都会被投入到一个或多个队列。
+      3. Queue：消息队列载体，每个消息都会被投入到一个或多个队列。一般都是不排他
 5. channel：消息通道，在一个客户端只会建立一条连接（长连接）里，一条连接可建立多个channel（多路复用），每个channel代表一个会话任务。
 6. consumer：消息消费者，就是接受消息的程序。
+
+### springboot整合
+
+#### AmqpAdmin
+
+创建删除交换机队列绑定
 
 
 
