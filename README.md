@@ -580,11 +580,44 @@ RabbitTemplate发送消息，@RabbitListener 监听消息代理发布的消息
 
 ### springboot整合
 
-#### AmqpAdmin
-
-创建删除交换机队列绑定
 
 
+ AmqpAdmin 创建删除交换机队列绑定
+
+@RabbitListener
+
+1. 放在方法或类上，参数一是Message，参数二是实体类，参数三是channel
+2. 同一个消息只有一个客户端能收到
+3. 当前方法处理完了释放了才会接受下一个消息
+4. @RabbitHandler 在有@RabbitListener类内的方法上，根据不同的参数类型，选择不同的方法接受
+
+#### 可靠性
+
+开启事务会大幅降低性能，所以使用
+
+消息确认机制 开启 `spring.rabbitmq.publisher-confirm-type=correlated`,设置回调
+
+1. publisher 发送到Broker时返回 confirmCallback 可靠抵达。集群模式下需要所有broker都收到
+2. publisher Exchange未投递到queue时 returnCallback
+3. consumer ack机制
+
+发送数据时设置唯一id，存到数据库。定时扫描数据库，没有送达的消息重发。
+
+
+
+消费端确认：保证每个消息被正确消费，才可以删除这个消息
+
+默认是自动确认，只要客户端接收到消息，就会自动确认，服务端删除消息
+
+开启手动确认`spring.rabbitmq.listener.simple.acknowledge-mode=manual`
+
+unacked的消息没被确认后会变回ready状态
+
+long deliveryTag = messsage.getMessageProperties().getDeliveryTag()一个channel内自增的
+
+channel.basicAck(deliveryTag,false) 确认消息。false非批量模式  确认可以try catch起来
+
+channel.basicNack()和channel.basicReject()拒绝消息
 
 ## 坑
 
