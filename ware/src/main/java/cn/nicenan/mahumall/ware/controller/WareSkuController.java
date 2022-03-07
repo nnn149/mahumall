@@ -28,6 +28,17 @@ public class WareSkuController {
     @Autowired
     private WareSkuService wareSkuService;
 
+
+    /**
+     * 查询sku是否有库存
+     * 返回当前id stock量
+     */
+    @PostMapping("/hasStock")
+//	public List<SkuHasStockVo> getSkuHasStock(@RequestBody List<Long> SkuIds){
+    public R getSkuHasStock(@RequestBody List<Long> SkuIds){
+        List<SkuHasStockVo> vos = wareSkuService.getSkuHasStock(SkuIds);
+        return R.ok().setData(vos);
+    }
     /**
      * 列表
      */

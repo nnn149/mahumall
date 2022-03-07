@@ -23,6 +23,7 @@ public class CartController {
     CartService cartService;
     private final String PATH = "redirect:http://cart.mahumall.com/cart.html";
 
+
     @ResponseBody
     @GetMapping("/currentUserCartItems")
     public List<CartItem> getCurrentUserCartItems() {

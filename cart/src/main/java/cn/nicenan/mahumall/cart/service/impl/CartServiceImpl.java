@@ -198,7 +198,7 @@ public class CartServiceImpl implements CartService {
                     String price = (String) r.get("data");
                     item.setPrice(new BigDecimal(price));
                 } catch (Exception e) {
-                    System.out.println("远程查询商品价格出错 [商品服务未启动]");
+                    System.out.println("远程查询商品价格出错 [商品服务未启动]"+e.getMessage());
                 }
                 return item;
             }).collect(Collectors.toList());

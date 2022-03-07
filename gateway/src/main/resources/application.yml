@@ -74,3 +74,10 @@ spring:
           # host为 search.mahumall.com多级域名都可以访问
           predicates:
             - Host=cart.mahumall.com
+        #nginx反代订单认证
+        - id: host_route
+          #lb负载均衡，注册中心内服务名（项目名）
+          uri: lb://mahumall-order
+          # host为 order.mahumall.com多级域名都可以访问
+          predicates:
+            - Host=order.mahumall.com

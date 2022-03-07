@@ -1,5 +1,6 @@
 package cn.nicenan.mahumall.ware.service;
 
+import cn.nicenan.mahumall.ware.vo.FareVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 import cn.nicenan.mahumall.common.utils.PageUtils;
 import cn.nicenan.mahumall.ware.entity.WareInfoEntity;
@@ -16,5 +17,7 @@ import java.util.Map;
 public interface WareInfoService extends IService<WareInfoEntity> {
 
     PageUtils queryPage(Map<String, Object> params);
+
+    FareVo getFare(Long addrId);
 }
 

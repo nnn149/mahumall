@@ -32,6 +32,10 @@ Feign调用流程
 
 [api文档](https://easydoc.net/s/78237135/ZUqEdvA4/hKJTcbfd)
 
+
+
+feign在远程调用之前要构造请求，调用拦截器（默认没有拦截器）。默认构造的request对象没有header。可以对添加自己的请求拦截器进行增强。[配置](order/src/main/java/cn/nicenan/mahumall/order/config/MyFeignConfig.java)
+
 ### 业务逻辑
 
 #### 商品系统平台属性
@@ -53,8 +57,31 @@ Feign调用流程
 
 [p83 发布商品流程](https://www.bilibili.com/video/BV1np4y1C7Yf?p=83&spm_id_from=pageDriver) 
 
+
+
+数据的查询=信息流、资金付款退款=资金流、物流
+
+订单中心：用户信息，订单信息，商品信息，物流信息，支付信息，促销信息
+
+订单状态:
+
+1. 待付款：需要库存锁定，支付超时自动取消订单
+2. 已付款/代发货：仓库调拨，配货，分拣，出库等
+3. 待收货/已发货：同步物流信息
+4. 已完成:后续支付侧结算，订单若有问题进入售后
+5. 已取消：自动取消或自动取消
+6. 售后
+
+**幂等性**
+
+[p264 订单](https://www.bilibili.com/video/BV1np4y1C7Yf?p=264&spm_id_from=pageDriver)
+
 mysql默认隔离级别是可重复读，调试的时候改成 未提交读 Read uncommitted 方便查询
 `SET SESSION TRANSACTION ISOLATION LEVEL READ UNCOMMITTED;`
+
+
+
+
 
 ## Elasticsearch
 
