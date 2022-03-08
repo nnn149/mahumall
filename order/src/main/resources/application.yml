@@ -9,6 +9,8 @@ spring:
       server-addr: 192.168.2.211:8848
   application:
     name: mahumall-order
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
 mybatis-plus:
   mapper-locations: classpath:/mapper/**/*.xml
   global-config:

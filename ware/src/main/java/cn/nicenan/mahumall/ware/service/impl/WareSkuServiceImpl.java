@@ -1,14 +1,19 @@
 package cn.nicenan.mahumall.ware.service.impl;
 
+import cn.nicenan.mahumall.common.exception.NotStockException;
 import cn.nicenan.mahumall.common.utils.R;
 import cn.nicenan.mahumall.ware.feign.ProductFeignService;
 import cn.nicenan.mahumall.ware.service.WareOrderTaskDetailService;
 import cn.nicenan.mahumall.ware.service.WareOrderTaskService;
+import cn.nicenan.mahumall.ware.vo.OrderItemVo;
 import cn.nicenan.mahumall.ware.vo.SkuHasStockVo;
+import cn.nicenan.mahumall.ware.vo.WareSkuLockVo;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.beans.Transient;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
@@ -123,9 +128,70 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
             // 查询当前sku的总库存量
             stockVo.setSkuId(id);
             // 这里库存可能为null 要避免空指针异常
-            stockVo.setHasStock(baseMapper.getSkuStock(id) != null);
+            Long skuStock = baseMapper.getSkuStock(id);
+            stockVo.setHasStock(skuStock > 0);
+            stockVo.setStock(Math.toIntExact(skuStock));
             return stockVo;
         }).collect(Collectors.toList());
+    }
+
+    /**
+     * 为某个订单锁定库存
+     *
+     * @param vo
+     */
+    //默认运行时异常都回滚
+    @Transactional(rollbackFor = NotStockException.class)
+    @Override
+    public void orderLockStock(WareSkuLockVo vo) {
+        //1.找到每个商品在哪个仓库都有库存
+        List<OrderItemVo> locks = vo.getLocks();
+        List<SkuWareHasStock> collect = locks.stream().map(item -> {
+            SkuWareHasStock stock = new SkuWareHasStock();
+            Long skuId = item.getSkuId();
+            stock.setSkuId(skuId);
+            stock.setNum(item.getCount());
+            //查询这个商品在哪里有库存
+            List<Long> wareIds = wareSkuDao.listWareIdHasSkuStock(skuId);
+            stock.setWareId(wareIds);
+            return stock;
+        }).collect(Collectors.toList());
+        Boolean allLock = true;
+        //2.锁定库存
+        for (SkuWareHasStock hasStock : collect) {
+            Boolean skuStocked = false;
+            Long skuId = hasStock.getSkuId();
+            List<Long> wareIds = hasStock.getWareId();
+            if (wareIds == null || wareIds.size() == 0) {
+                throw new NotStockException("商品" + skuId + "没有库存");
+            }
+            for (Long wareId : wareIds) {
+                Long count = wareSkuDao.lockSkuStock(skuId, wareId, hasStock.getNum());
+                if (count == null || count == 0) {
+                    //当前仓库锁失败,重试下一个仓库
+                    skuStocked = true;
+                    break;
+                } else {
+                    skuStocked = false;
+                }
+            }
+            if (skuStocked) {
+                //当前商品所有仓库都没有锁住
+                throw new NotStockException("商品" + skuId + "没有库存");
+            }
+        }
+        //3肯定全部都是锁定成功的
+        return;
+    }
+
+    @Data
+    class SkuWareHasStock {
+
+        private Long skuId;
+
+        private List<Long> wareId;
+
+        private Integer num;
     }
 
 }

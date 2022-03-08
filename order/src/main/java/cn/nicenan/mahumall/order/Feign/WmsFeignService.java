@@ -1,6 +1,7 @@
 package cn.nicenan.mahumall.order.Feign;
 
 import cn.nicenan.mahumall.common.utils.R;
+import cn.nicenan.mahumall.order.vo.FareVo;
 import cn.nicenan.mahumall.order.vo.SkuStockVo;
 import cn.nicenan.mahumall.order.vo.WareSkuLockVo;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -23,7 +24,7 @@ public interface WmsFeignService {
     R<List<SkuStockVo>> getSkuHasStock(@RequestBody List<Long> SkuIds);
 
     @GetMapping("/ware/wareinfo/fare")
-    R getFare(@RequestParam("addrId") Long addrId);
+    R<FareVo> getFare(@RequestParam("addrId") Long addrId);
 
     /**
      * 锁定库存

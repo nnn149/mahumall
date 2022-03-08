@@ -1,6 +1,8 @@
 package cn.nicenan.mahumall.order.service;
 
 import cn.nicenan.mahumall.order.vo.OrderConfirmVo;
+import cn.nicenan.mahumall.order.vo.OrderSubmitVo;
+import cn.nicenan.mahumall.order.vo.SubmitOrderResponseVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 import cn.nicenan.mahumall.common.utils.PageUtils;
 import cn.nicenan.mahumall.order.entity.OrderEntity;
@@ -20,5 +22,7 @@ public interface OrderService extends IService<OrderEntity> {
     PageUtils queryPage(Map<String, Object> params);
 
     OrderConfirmVo confirmOrder() throws ExecutionException, InterruptedException;
+
+    SubmitOrderResponseVo submitOrder(OrderSubmitVo submitVo);
 }
 

@@ -1,6 +1,7 @@
 package cn.nicenan.mahumall.ware.service;
 
 import cn.nicenan.mahumall.ware.vo.SkuHasStockVo;
+import cn.nicenan.mahumall.ware.vo.WareSkuLockVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 import cn.nicenan.mahumall.common.utils.PageUtils;
 import cn.nicenan.mahumall.ware.entity.WareSkuEntity;
@@ -24,5 +25,7 @@ public interface WareSkuService extends IService<WareSkuEntity> {
     List<SkuHasStockVo> getSkusHasStock(List<Long> skuIds);
 
     List<SkuHasStockVo> getSkuHasStock(List<Long> skuIds);
+
+    void orderLockStock(WareSkuLockVo vo);
 }
 
