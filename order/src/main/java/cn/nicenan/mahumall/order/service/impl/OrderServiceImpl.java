@@ -27,6 +27,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -282,6 +283,12 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                 return itemEntity;
             }).collect(Collectors.toList());
         }
+        itemEntities.stream().forEach(new Consumer<OrderItemEntity>() {
+            @Override
+            public void accept(OrderItemEntity orderItemEntity) {
+
+            }
+        });
         return itemEntities;
     }
 
