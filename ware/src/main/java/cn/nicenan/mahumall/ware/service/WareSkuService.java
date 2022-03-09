@@ -1,5 +1,7 @@
 package cn.nicenan.mahumall.ware.service;
 
+import cn.nicenan.mahumall.common.to.mq.OrderTo;
+import cn.nicenan.mahumall.common.to.mq.StockLockedTo;
 import cn.nicenan.mahumall.ware.vo.SkuHasStockVo;
 import cn.nicenan.mahumall.ware.vo.WareSkuLockVo;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -27,5 +29,12 @@ public interface WareSkuService extends IService<WareSkuEntity> {
     List<SkuHasStockVo> getSkuHasStock(List<Long> skuIds);
 
     void orderLockStock(WareSkuLockVo vo);
+
+    void unlockStock(StockLockedTo to);
+
+    /**
+     * 由于订单超时而自动释放订单之后来解锁库存
+     */
+    void unlockStock(OrderTo to);
 }
 

@@ -1,32 +1,13 @@
-package cn.nicenan.mahumall.order.entity;
-
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-
-import java.math.BigDecimal;
-import java.io.Serializable;
-import java.util.Date;
-import java.util.List;
+package cn.nicenan.mahumall.common.to.mq;
 
 import lombok.Data;
 
-/**
- * 订单
- *
- * @author Nannan
- * @email 1041836312@qq.com
- * @date 2021-08-21 22:40:20
- */
-@Data
-@TableName("oms_order")
-public class OrderEntity implements Serializable {
-    private static final long serialVersionUID = 1L;
+import java.math.BigDecimal;
+import java.util.Date;
 
-    /**
-     * id
-     */
-    @TableId
+@Data
+public class OrderTo {
+
     private Long id;
     /**
      * member_id
@@ -192,7 +173,4 @@ public class OrderEntity implements Serializable {
      * 修改时间
      */
     private Date modifyTime;
-
-    @TableField(exist = false)
-    private List<OrderItemEntity> itemEntities;
 }

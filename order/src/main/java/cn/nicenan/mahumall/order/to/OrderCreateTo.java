@@ -1,4 +1,4 @@
-package cn.nicenan.mahumall.order.To;
+package cn.nicenan.mahumall.order.to;
 
 import cn.nicenan.mahumall.order.entity.OrderEntity;
 import cn.nicenan.mahumall.order.entity.OrderItemEntity;

@@ -8,7 +8,7 @@ import cn.nicenan.mahumall.order.Feign.CartFeignService;
 import cn.nicenan.mahumall.order.Feign.MemberFeignService;
 import cn.nicenan.mahumall.order.Feign.ProductFeignService;
 import cn.nicenan.mahumall.order.Feign.WmsFeignService;
-import cn.nicenan.mahumall.order.To.OrderCreateTo;
+import cn.nicenan.mahumall.order.to.OrderCreateTo;
 import cn.nicenan.mahumall.order.constant.OrderConstant;
 import cn.nicenan.mahumall.order.entity.OrderItemEntity;
 import cn.nicenan.mahumall.order.interceptor.LoginUserInterceptor;
@@ -27,7 +27,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -179,7 +178,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                     // 库存足够 锁定成功 给MQ发送消息
                     submitVo.setOrderEntity(order.getOrder());
 //                    rabbitTemplate.convertAndSend(this.eventExchange, this.createOrder, order.getOrder());
-//					int i = 10/0;
+                    int i = 10 / 0;
                 } else {
                     // 锁定失败
                     String msg = (String) r.get("msg");
@@ -191,6 +190,30 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
             }
         }
         return submitVo;
+    }
+
+    @Override
+
+    public PageUtils queryPageWithItem(Map<String, Object> params) {
+        MemberRespTo rsepVo = LoginUserInterceptor.threadLocal.get();
+        IPage<OrderEntity> page = this.page(
+                new Query<OrderEntity>().getPage(params),
+                // 查询这个用户的最新订单 [降序排序]
+                new QueryWrapper<OrderEntity>().eq("member_id", rsepVo.getId()).orderByDesc("id")
+        );
+        List<OrderEntity> order_sn = page.getRecords().stream().map(order -> {
+            // 查询这个订单关联的所有订单项
+            List<OrderItemEntity> orderSn = orderItemService.list(new QueryWrapper<OrderItemEntity>().eq("order_sn", order.getOrderSn()));
+            order.setItemEntities(orderSn);
+            return order;
+        }).collect(Collectors.toList());
+        page.setRecords(order_sn);
+        return new PageUtils(page);
+    }
+
+    @Override
+    public OrderEntity getOrderByOrderSn(String orderSn) {
+        return this.getOne(new QueryWrapper<OrderEntity>().eq("order_sn", orderSn));
     }
 
     /**
@@ -283,12 +306,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                 return itemEntity;
             }).collect(Collectors.toList());
         }
-        itemEntities.stream().forEach(new Consumer<OrderItemEntity>() {
-            @Override
-            public void accept(OrderItemEntity orderItemEntity) {
-
-            }
-        });
         return itemEntities;
     }
 
