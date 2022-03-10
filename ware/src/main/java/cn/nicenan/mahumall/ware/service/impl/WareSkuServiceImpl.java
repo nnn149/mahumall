@@ -131,7 +131,7 @@ public class WareSkuServiceImpl extends ServiceImpl<WareSkuDao, WareSkuEntity> i
     @Transactional
     @Override
     public void unlockStock(OrderTo to) {
-        log.info("\n订单超时自动关闭,准备解锁库存");
+        log.info("\n订单超时未支付自动关闭,准备解锁库存");
         String orderSn = to.getOrderSn();
         // 查一下最新的库存状态 防止重复解锁库存[Order服务可能会提前解锁]
         WareOrderTaskEntity taskEntity = orderTaskService.getOrderTaskByOrderSn(orderSn);
