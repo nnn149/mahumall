@@ -9,6 +9,9 @@ import cn.nicenan.mahumall.order.Feign.CartFeignService;
 import cn.nicenan.mahumall.order.Feign.MemberFeignService;
 import cn.nicenan.mahumall.order.Feign.ProductFeignService;
 import cn.nicenan.mahumall.order.Feign.WmsFeignService;
+import cn.nicenan.mahumall.order.constant.PayConstant;
+import cn.nicenan.mahumall.order.entity.PaymentInfoEntity;
+import cn.nicenan.mahumall.order.service.PaymentInfoService;
 import cn.nicenan.mahumall.order.to.OrderCreateTo;
 import cn.nicenan.mahumall.order.constant.OrderConstant;
 import cn.nicenan.mahumall.order.entity.OrderItemEntity;
@@ -68,6 +71,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
     private ProductFeignService productFeignService;
     @Autowired
     private RabbitTemplate rabbitTemplate;
+    @Autowired
+    private PaymentInfoService paymentInfoService;
     @Value("${myRabbitmq.MQConfig.eventExchange}")
     private String eventExchange;
 
@@ -192,7 +197,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
                 R r = wmsFeignService.orderLockStock(lockVo);
                 if (r.getCode() == 0) {
                     // 库存足够 锁定成功 给MQ发送消息
-                    submitVo.setOrderEntity(order.getOrder());
+                    submitVo.setOrder(order.getOrder());
                     rabbitTemplate.convertAndSend(this.eventExchange, this.createOrder, order.getOrder());
 //                    int i = 10 / 0;
                 } else {
@@ -237,7 +242,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
         log.info("\n收到过期的订单信息(未支付)--准关闭订单:" + entity.getOrderSn());
         // 查询这个订单的最新状态
         OrderEntity orderEntity = this.getById(entity.getId());
-        if(Objects.equals(orderEntity.getStatus(), OrderStatusEnum.CREATE_NEW.getCode())){
+        if (Objects.equals(orderEntity.getStatus(), OrderStatusEnum.CREATE_NEW.getCode())) {
             OrderEntity update = new OrderEntity();
             update.setId(entity.getId());
             update.setStatus(OrderStatusEnum.CANCLED.getCode());
@@ -248,13 +253,46 @@ public class OrderServiceImpl extends ServiceImpl<OrderDao, OrderEntity> impleme
             try {
                 // 保证消息 100% 发出去 每一个消息在数据库保存详细信息
                 // 定期扫描数据库 将失败的消息在发送一遍
-                rabbitTemplate.convertAndSend(eventExchange, ReleaseOtherKey , orderTo);
+                rabbitTemplate.convertAndSend(eventExchange, ReleaseOtherKey, orderTo);
             } catch (AmqpException e) {
                 // TODO 将没发送成功的消息进行重试发送.
             }
         }
     }
 
+    @Override
+    public PayVo getOrderPay(String orderSn) {
+        OrderEntity orderEntity = this.getOne(new QueryWrapper<OrderEntity>().eq("order_sn", orderSn));
+        PayVo payVo = new PayVo();
+        payVo.setOut_trade_no(orderSn);
+        BigDecimal payAmount = orderEntity.getPayAmount().setScale(2, BigDecimal.ROUND_UP);
+        payVo.setTotal_amount(payAmount.toString());
+
+        List<OrderItemEntity> orderItemEntities = orderItemService.list(new QueryWrapper<OrderItemEntity>().eq("order_sn", orderSn));
+        OrderItemEntity orderItemEntity = orderItemEntities.get(0);
+        payVo.setSubject(orderItemEntity.getSkuName());
+        payVo.setBody(orderItemEntity.getSkuAttrsVals());
+        return payVo;
+    }
+    @Override
+    public void handlerPayResult(PayAsyncVo payAsyncVo) {
+        //保存交易流水
+        PaymentInfoEntity infoEntity = new PaymentInfoEntity();
+        String orderSn = payAsyncVo.getOut_trade_no();
+        infoEntity.setOrderSn(orderSn);
+        infoEntity.setAlipayTradeNo(payAsyncVo.getTrade_no());
+        infoEntity.setSubject(payAsyncVo.getSubject());
+        String trade_status = payAsyncVo.getTrade_status();
+        infoEntity.setPaymentStatus(trade_status);
+        infoEntity.setCreateTime(new Date());
+        infoEntity.setCallbackTime(payAsyncVo.getNotify_time());
+//        paymentInfoService.save(infoEntity);
+
+        //判断交易状态是否成功
+        if ("TRADE_SUCCESS".equals(trade_status) || "TRADE_FINISHED".equals(trade_status)) {
+            baseMapper.updateOrderStatus(orderSn, OrderStatusEnum.PAYED.getCode(), PayConstant.ALIPAY);
+        }
+    }
     /**
      * 创建订单
      */

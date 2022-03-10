@@ -37,7 +37,7 @@ public class OrderWebController {
             // 下单失败回到订单重新确认订单信息
             if (responseVo.getCode() == 0) {
                 // 下单成功取支付选项
-                model.addAttribute("submitOrderResp", responseVo);
+                model.addAttribute("order", responseVo.getOrder());
                 return "pay";
             } else {
                 String msg = "下单失败";
