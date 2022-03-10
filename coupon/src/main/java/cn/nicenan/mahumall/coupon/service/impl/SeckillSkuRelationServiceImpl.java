@@ -11,6 +11,7 @@ import cn.nicenan.mahumall.common.utils.Query;
 import cn.nicenan.mahumall.coupon.dao.SeckillSkuRelationDao;
 import cn.nicenan.mahumall.coupon.entity.SeckillSkuRelationEntity;
 import cn.nicenan.mahumall.coupon.service.SeckillSkuRelationService;
+import org.springframework.util.StringUtils;
 
 
 @Service("seckillSkuRelationService")
@@ -18,9 +19,16 @@ public class SeckillSkuRelationServiceImpl extends ServiceImpl<SeckillSkuRelatio
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
+        QueryWrapper<SeckillSkuRelationEntity> wrapper = new QueryWrapper<>();
+        String promotionSessionId = (String) params.get("promotionSessionId");
+        // 场次ID不是空
+        if(!StringUtils.isEmpty(promotionSessionId)){
+            wrapper.eq("promotion_session_id",promotionSessionId);
+        }
+
         IPage<SeckillSkuRelationEntity> page = this.page(
                 new Query<SeckillSkuRelationEntity>().getPage(params),
-                new QueryWrapper<SeckillSkuRelationEntity>()
+                wrapper
         );
 
         return new PageUtils(page);

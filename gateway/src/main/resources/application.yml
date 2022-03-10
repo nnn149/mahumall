@@ -18,6 +18,14 @@ spring:
           filters:
             # api去掉其他保留
             - RewritePath=/api/?(?<segment>.*), /$\{segment}
+        #商品服务的路由
+        - id: coupon_route
+          uri: lb://mahumall-coupon
+          predicates:
+            - Path=/api/coupon/**
+          filters:
+            # api去掉其他保留
+            - RewritePath=/api/?(?<segment>.*), /$\{segment}
         #库存服务的路由
         - id: ware_route
           uri: lb://mahumall-ware
