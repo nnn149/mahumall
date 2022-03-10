@@ -189,6 +189,8 @@ AT模式：
 
 #### 高并发下解决方案
 
+使用消息保证柔性事务和最终一致性，必须保证**消息的可靠性**
+
 订单出现错误发消息给库存服务，库存服务自己解锁库存
 
 库存服务自动解锁：
@@ -801,7 +803,7 @@ spring的schedule定时任务轮询消耗系统内存，增加了数据库压力
 
 ### springboot整合
 
-
+消息可以自己成为一个微服务，方便日志记录
 
  AmqpAdmin 创建删除交换机队列绑定
 
@@ -814,7 +816,7 @@ spring的schedule定时任务轮询消耗系统内存，增加了数据库压力
 
 创建Bean来创建队列、交换机、绑定等。[配置](order/src/main/java/cn/nicenan/mahumall/order/config/MyMqConfig.java)
 
-#### 可靠性
+### 可靠性
 
 开启事务会大幅降低性能，所以使用
 
@@ -840,7 +842,36 @@ long deliveryTag = messsage.getMessageProperties().getDeliveryTag()一个channel
 
 channel.basicAck(deliveryTag,false) 确认消息。false非批量模式  确认可以try catch起来
 
-channel.basicNack()和channel.basicReject()拒绝消息
+channel.basicNack()和channel.basicReject()拒绝消息 
+
+#### 消息丢失
+
+1. 消息发送出去，由于网络问题没有抵达服务器
+   1. 使用**trycatch**做好容错，失败后要有重试机制，
+   2. 可记录**每一个消息的信息到数据库**，
+   3. 采用定期扫描重发
+2. 消息抵达Broker，Broker要将消息写入磁盘才算成功，可能在持久化之前宕机
+   1. 开启发送者的**confirmCallback**回调机制，确认服务器收到
+   2. 开启**returnCallback**回调，收到说明写入队列出错
+3. 消费者刚拿到消息就宕机
+   1. 消费者开启**手动确认ack**机制
+
+#### 消息重复
+
+1. 消费者收到消息后，事务已提交，宕机或断网，还没手动确认消息，消息会从unacked变回ready状态
+   1. 业务逻辑方法设计成**幂等**的
+   2. 设计防重表，发送消息的每一个业务都有唯一标识，处理过的就不用处理
+   3. 从mq的message取得getRedelivered可以判断消息是否是重新派发来的，结合处理
+2. 消息消费失败，由于重试机制，自动将消息又发送出去
+   1. 正常情况，无需处理
+
+#### 消息积压
+
+1. 消费者宕机积压，消费者消费能力不足
+   1. 上线更多的消费者，进行正常消费
+   2. 上线专门的队列消费服务，先将消息批量提取出来，记录数据库，离线处理
+2. 发送者发送流量太大
+   1. 限流，限业务
 
 ## 坑
 
