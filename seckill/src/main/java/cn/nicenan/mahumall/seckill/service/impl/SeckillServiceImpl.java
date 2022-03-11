@@ -18,7 +18,9 @@ import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -125,6 +127,44 @@ public class SeckillServiceImpl implements SeckillService {
 
     @Override
     public String kill(String killId, String key, Integer num) {
+        return null;
+    }
+
+    @Override
+    public List<SeckillSkuRedisTo> getCurrentSeckillSkus() {
+
+        // 1.确定当前时间属于那个秒杀场次
+        long time = System.currentTimeMillis();
+        // 定义一段受保护的资源
+
+        Set<String> keys = stringRedisTemplate.keys(SESSION_CACHE_PREFIX + "*");
+        for (String key : keys) {
+            // seckill:sessions:1593993600000_1593995400000
+            String replace = key.replace("seckill:sessions:", "");
+            String[] split = replace.split("_");
+            long start = Long.parseLong(split[0]);
+            long end = Long.parseLong(split[1]);
+            if (time >= start && time <= end) {
+                // 2.获取这个秒杀场次的所有商品信息
+                List<String> range = stringRedisTemplate.opsForList().range(key, 0, 100);
+                BoundHashOperations<String, String, String> hashOps = stringRedisTemplate.boundHashOps(SKUKILL_CACHE_PREFIX);
+                List<String> list = hashOps.multiGet(range);
+                if (list != null) {
+                    return list.stream().map(item -> {
+                        SeckillSkuRedisTo redisTo = null;
+                        try {
+                            redisTo = new ObjectMapper().readValue(item, SeckillSkuRedisTo.class);
+                        } catch (JsonProcessingException e) {
+                            e.printStackTrace();
+                        }
+//						redisTo.setRandomCode(null);
+                        return redisTo;
+                    }).collect(Collectors.toList());
+                }
+                break;
+            }
+        }
+
         return null;
     }
 }

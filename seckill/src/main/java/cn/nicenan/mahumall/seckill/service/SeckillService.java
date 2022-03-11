@@ -1,5 +1,9 @@
 package cn.nicenan.mahumall.seckill.service;
 
+import cn.nicenan.mahumall.seckill.to.SeckillSkuRedisTo;
+
+import java.util.List;
+
 public interface SeckillService {
 
     void uploadSeckillSkuLatest3Day();
@@ -12,4 +16,7 @@ public interface SeckillService {
 //    SeckillSkuRedisTo getSkuSeckillInfo(Long skuId);
 
     String kill(String killId, String key, Integer num);
+
+    List<SeckillSkuRedisTo> getCurrentSeckillSkus();
+
 }
