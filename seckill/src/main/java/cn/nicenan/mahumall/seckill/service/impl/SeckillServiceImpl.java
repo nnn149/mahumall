@@ -22,6 +22,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Service
@@ -165,6 +166,29 @@ public class SeckillServiceImpl implements SeckillService {
             }
         }
 
+        return null;
+    }
+
+    @Override
+    public SeckillSkuRedisTo getSkuSeckillInfo(Long skuId) throws JsonProcessingException {
+        BoundHashOperations<String, String, String> hashOps = stringRedisTemplate.boundHashOps(SKUKILL_CACHE_PREFIX);
+        Set<String> keys = hashOps.keys();
+        if(keys != null && keys.size() > 0){
+            String regx = "\\d-" + skuId;
+            for (String key : keys) {
+                if(Pattern.matches(regx, key)){
+                    String json = hashOps.get(key);
+                    SeckillSkuRedisTo to = new ObjectMapper().readValue(json, SeckillSkuRedisTo.class);
+                    // 处理一下随机码
+                    long current = System.currentTimeMillis();
+
+                    if(current <= to.getStartTime() || current >= to.getEndTime()){
+                        to.setRandomCode(null);
+                    }
+                    return to;
+                }
+            }
+        }
         return null;
     }
 }

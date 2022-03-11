@@ -41,6 +41,6 @@ public class SkuItemVo {
      * 参数规格信息
      */
     List<SpuItemAttrGroupVo> groupAttrs;
-
+    SeckillInfoVo seckillInfoVo;
 
 }

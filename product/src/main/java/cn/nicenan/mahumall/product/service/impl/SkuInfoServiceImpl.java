@@ -1,15 +1,15 @@
 package cn.nicenan.mahumall.product.service.impl;
 
+import cn.nicenan.mahumall.common.utils.R;
 import cn.nicenan.mahumall.product.entity.SkuImagesEntity;
 import cn.nicenan.mahumall.product.entity.SpuInfoDescEntity;
+import cn.nicenan.mahumall.product.feign.SeckillFeignService;
 import cn.nicenan.mahumall.product.service.AttrGroupService;
 import cn.nicenan.mahumall.product.service.SkuSaleAttrValueService;
 import cn.nicenan.mahumall.product.service.SpuInfoDescService;
-import cn.nicenan.mahumall.product.vo.Images;
-import cn.nicenan.mahumall.product.vo.ItemSaleAttrVo;
-import cn.nicenan.mahumall.product.vo.SkuItemVo;
-import cn.nicenan.mahumall.product.vo.SpuItemAttrGroupVo;
+import cn.nicenan.mahumall.product.vo.*;
 import com.baomidou.mybatisplus.core.toolkit.StringUtils;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -43,6 +43,8 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
     SkuSaleAttrValueService skuSaleAttrValueService;
     @Autowired
     ThreadPoolExecutor threadPoolExecutor;
+    @Autowired
+    private SeckillFeignService seckillFeignService;
 
     @Override
     public PageUtils queryPage(Map<String, Object> params) {
@@ -141,8 +143,19 @@ public class SkuInfoServiceImpl extends ServiceImpl<SkuInfoDao, SkuInfoEntity> i
             skuItemVo.setGroupAttrs(attrGroupVos);
         }, threadPoolExecutor);
 
+        //查询秒杀优惠
+        CompletableFuture<Void> seckillFuture = CompletableFuture.runAsync(() -> {
+            R<SeckillInfoVo> r = seckillFeignService.getSkuSeckillInfo(skuId);
+            if (r.getCode() == 0) {
+                SeckillInfoVo data = r.getData(new TypeReference<>() {
+                });
+                skuItemVo.setSeckillInfoVo(data);
+            }
+        }, threadPoolExecutor);
+
+
         //等待所有任务完成
-        CompletableFuture.allOf(imageFuture, spuSaleAttrFuture, spuInfoFuture, spuItemAttrFuture).get();
+        CompletableFuture.allOf(imageFuture, spuSaleAttrFuture, spuInfoFuture, spuItemAttrFuture, seckillFuture).get();
         return skuItemVo;
     }
 

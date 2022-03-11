@@ -1,6 +1,7 @@
 package cn.nicenan.mahumall.seckill.service;
 
 import cn.nicenan.mahumall.seckill.to.SeckillSkuRedisTo;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import java.util.List;
 
@@ -19,4 +20,5 @@ public interface SeckillService {
 
     List<SeckillSkuRedisTo> getCurrentSeckillSkus();
 
+    SeckillSkuRedisTo getSkuSeckillInfo(Long skuId) throws JsonProcessingException;
 }
