@@ -16,7 +16,7 @@ public interface SeckillService {
 
 //    SeckillSkuRedisTo getSkuSeckillInfo(Long skuId);
 
-    String kill(String killId, String key, Integer num);
+    String kill(String killId, String key, Integer num) throws JsonProcessingException;
 
     List<SeckillSkuRedisTo> getCurrentSeckillSkus();
 

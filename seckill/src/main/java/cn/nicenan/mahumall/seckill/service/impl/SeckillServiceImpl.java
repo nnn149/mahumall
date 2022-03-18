@@ -1,27 +1,35 @@
 package cn.nicenan.mahumall.seckill.service.impl;
 
+import cn.nicenan.mahumall.common.to.MemberRespTo;
+import cn.nicenan.mahumall.common.to.mq.SecKillOrderTo;
 import cn.nicenan.mahumall.common.utils.R;
 import cn.nicenan.mahumall.seckill.feign.CouponFeignService;
 import cn.nicenan.mahumall.seckill.feign.ProductFeignService;
+import cn.nicenan.mahumall.seckill.interceptor.LoginUserInterceptor;
 import cn.nicenan.mahumall.seckill.service.SeckillService;
 import cn.nicenan.mahumall.seckill.to.SeckillSkuRedisTo;
 import cn.nicenan.mahumall.seckill.vo.SeckillSessionsWithSkus;
 import cn.nicenan.mahumall.seckill.vo.SkuInfoVo;
+import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.redisson.api.RSemaphore;
 import org.redisson.api.RedissonClient;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.BoundHashOperations;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -39,6 +47,9 @@ public class SeckillServiceImpl implements SeckillService {
 
     @Autowired
     private RedissonClient redissonClient;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
 
 //    @Autowired
 //    private RabbitTemplate rabbitTemplate;
@@ -127,7 +138,67 @@ public class SeckillServiceImpl implements SeckillService {
     }
 
     @Override
-    public String kill(String killId, String key, Integer num) {
+    public String kill(String killId, String key, Integer num) throws JsonProcessingException {
+        MemberRespTo memberRsepVo = LoginUserInterceptor.threadLocal.get();
+
+        // 1.获取当前秒杀商品的详细信息
+        BoundHashOperations<String, String, String> hashOps = stringRedisTemplate.boundHashOps(SKUKILL_CACHE_PREFIX);
+        String json = hashOps.get(killId);
+        if (StringUtils.isEmpty(json)) {
+            return null;
+        } else {
+            SeckillSkuRedisTo redisTo = new ObjectMapper().readValue(json, SeckillSkuRedisTo.class);
+            // 校验合法性
+            long time = System.currentTimeMillis();
+            if (time >= redisTo.getStartTime() && time <= redisTo.getEndTime()) {
+                // 1.校验随机码跟商品id是否匹配
+                String randomCode = redisTo.getRandomCode();
+                String skuId = redisTo.getPromotionSessionId() + "-" + redisTo.getSkuId();
+
+                if (randomCode.equals(key) && killId.equals(skuId)) {
+                    // 2.说明数据合法 校验随机码和商品id
+                    BigDecimal limit = redisTo.getSeckillLimit();
+                    //购物数量是否合理
+                    if (num <= limit.intValue()) {
+                        // 3.验证这个人是否已经购买过了.幂等性，如果只要秒杀成功，就去占位
+                        String redisKey = memberRsepVo.getId() + "-" + skuId;
+                        // 让数据自动过期 就是活动过期时间
+                        long ttl = redisTo.getEndTime() - redisTo.getStartTime();
+                        Boolean aBoolean = stringRedisTemplate.opsForValue().setIfAbsent(redisKey, num.toString(), ttl < 0 ? 0 : ttl, TimeUnit.MILLISECONDS);
+                        if (aBoolean) {
+                            System.out.println(" 占位成功 说明从来没买过");
+                            // 占位成功 说明从来没买过
+                            //信号量取出
+                            RSemaphore semaphore = redissonClient.getSemaphore(SKUSTOCK_SEMAPHONE + randomCode);
+                            //tryAcquire 尝试获取信号量 不阻塞
+                            boolean acquire = semaphore.tryAcquire(num);
+                            if (acquire) {
+                                // 秒杀成功
+                                // 快速下单 发送MQ
+                                String orderSn = IdWorker.getTimeId() + UUID.randomUUID().toString().replace("-", "").substring(7, 8);
+                                System.out.println("orderSn:" + orderSn);
+                                SecKillOrderTo orderTo = new SecKillOrderTo();
+                                orderTo.setOrderSn(orderSn);
+                                orderTo.setMemberId(memberRsepVo.getId());
+                                orderTo.setNum(num);
+                                orderTo.setSkuId(redisTo.getSkuId());
+                                orderTo.setSeckillPrice(redisTo.getSeckillPrice());
+                                orderTo.setPromotionSessionId(redisTo.getPromotionSessionId());
+                                rabbitTemplate.convertAndSend("order-event-exchange", "order.seckill.order", orderTo);
+                                return orderSn;
+                            }
+                        } else {
+                            System.out.println(" 占位失败");
+                            return null;
+                        }
+                    }
+                } else {
+                    return null;
+                }
+            } else {
+                return null;
+            }
+        }
         return null;
     }
 
@@ -173,16 +244,16 @@ public class SeckillServiceImpl implements SeckillService {
     public SeckillSkuRedisTo getSkuSeckillInfo(Long skuId) throws JsonProcessingException {
         BoundHashOperations<String, String, String> hashOps = stringRedisTemplate.boundHashOps(SKUKILL_CACHE_PREFIX);
         Set<String> keys = hashOps.keys();
-        if(keys != null && keys.size() > 0){
+        if (keys != null && keys.size() > 0) {
             String regx = "\\d-" + skuId;
             for (String key : keys) {
-                if(Pattern.matches(regx, key)){
+                if (Pattern.matches(regx, key)) {
                     String json = hashOps.get(key);
                     SeckillSkuRedisTo to = new ObjectMapper().readValue(json, SeckillSkuRedisTo.class);
                     // 处理一下随机码
                     long current = System.currentTimeMillis();
 
-                    if(current <= to.getStartTime() || current >= to.getEndTime()){
+                    if (current <= to.getStartTime() || current >= to.getEndTime()) {
                         to.setRandomCode(null);
                     }
                     return to;

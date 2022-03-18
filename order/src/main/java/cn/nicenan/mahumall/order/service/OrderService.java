@@ -1,5 +1,6 @@
 package cn.nicenan.mahumall.order.service;
 
+import cn.nicenan.mahumall.common.to.mq.SecKillOrderTo;
 import cn.nicenan.mahumall.order.vo.*;
 import com.baomidou.mybatisplus.extension.service.IService;
 import cn.nicenan.mahumall.common.utils.PageUtils;
@@ -32,5 +33,7 @@ public interface OrderService extends IService<OrderEntity> {
     PayVo getOrderPay(String orderSn);
 
     void handlerPayResult(PayAsyncVo payAsyncVo);
+
+    void createSecKillOrder(SecKillOrderTo secKillOrderTo);
 }
 

@@ -1514,7 +1514,7 @@
             var num = $("#numInput").val();
             location.href = "http://seckill.mahumall.com/kill?killId=" + killId + "&key=" + $(this).attr("code") + "&num=" + num;
         }else{
-            layer.msg("请先登录!")
+            alert("请先登录!")
         }
         return false;
     })
