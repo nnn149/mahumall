@@ -1,26 +1,19 @@
-package cn.nicenan.mahumall.seckill.config;
+package cn.nicenan.mahumall.auth.config;
 
 import com.alibaba.csp.sentinel.adapter.spring.webmvc.callback.BlockExceptionHandler;
-import com.alibaba.csp.sentinel.context.Context;
-import com.alibaba.csp.sentinel.slotchain.ProcessorSlotEntryCallback;
-import com.alibaba.csp.sentinel.slotchain.ResourceWrapper;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.csp.sentinel.slots.block.authority.AuthorityException;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeException;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
 import com.alibaba.csp.sentinel.slots.block.flow.param.ParamFlowException;
-import com.alibaba.csp.sentinel.slots.statistic.StatisticSlot;
-import com.alibaba.csp.sentinel.slots.statistic.StatisticSlotCallbackRegistry;
 import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 import org.springframework.context.annotation.Configuration;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.HashMap;
-import java.util.Map;
 
 @Configuration
-public class SeckillSentinelConfig implements BlockExceptionHandler {
+public class MySentinelConfig implements BlockExceptionHandler {
     @Override
     public void handle(HttpServletRequest httpServletRequest, HttpServletResponse response, BlockException e) throws Exception {
 
