@@ -10,10 +10,15 @@ import cn.nicenan.mahumall.seckill.service.SeckillService;
 import cn.nicenan.mahumall.seckill.to.SeckillSkuRedisTo;
 import cn.nicenan.mahumall.seckill.vo.SeckillSessionsWithSkus;
 import cn.nicenan.mahumall.seckill.vo.SkuInfoVo;
+import com.alibaba.csp.sentinel.Entry;
+import com.alibaba.csp.sentinel.SphU;
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.sf.jsqlparser.statement.Block;
 import org.redisson.api.RSemaphore;
 import org.redisson.api.RedissonClient;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -202,41 +207,50 @@ public class SeckillServiceImpl implements SeckillService {
         return null;
     }
 
+    @SentinelResource(value = "CurrentSeckillSkusResource", blockHandler = "blockHandler")
     @Override
     public List<SeckillSkuRedisTo> getCurrentSeckillSkus() {
 
         // 1.确定当前时间属于那个秒杀场次
         long time = System.currentTimeMillis();
         // 定义一段受保护的资源
-
-        Set<String> keys = stringRedisTemplate.keys(SESSION_CACHE_PREFIX + "*");
-        for (String key : keys) {
-            // seckill:sessions:1593993600000_1593995400000
-            String replace = key.replace("seckill:sessions:", "");
-            String[] split = replace.split("_");
-            long start = Long.parseLong(split[0]);
-            long end = Long.parseLong(split[1]);
-            if (time >= start && time <= end) {
-                // 2.获取这个秒杀场次的所有商品信息
-                List<String> range = stringRedisTemplate.opsForList().range(key, 0, 100);
-                BoundHashOperations<String, String, String> hashOps = stringRedisTemplate.boundHashOps(SKUKILL_CACHE_PREFIX);
-                List<String> list = hashOps.multiGet(range);
-                if (list != null) {
-                    return list.stream().map(item -> {
-                        SeckillSkuRedisTo redisTo = null;
-                        try {
-                            redisTo = new ObjectMapper().readValue(item, SeckillSkuRedisTo.class);
-                        } catch (JsonProcessingException e) {
-                            e.printStackTrace();
-                        }
+        try (Entry entry = SphU.entry("getCurrentSeckillSkus")) {
+            Set<String> keys = stringRedisTemplate.keys(SESSION_CACHE_PREFIX + "*");
+            for (String key : keys) {
+                // seckill:sessions:1593993600000_1593995400000
+                String replace = key.replace("seckill:sessions:", "");
+                String[] split = replace.split("_");
+                long start = Long.parseLong(split[0]);
+                long end = Long.parseLong(split[1]);
+                if (time >= start && time <= end) {
+                    // 2.获取这个秒杀场次的所有商品信息
+                    List<String> range = stringRedisTemplate.opsForList().range(key, 0, 100);
+                    BoundHashOperations<String, String, String> hashOps = stringRedisTemplate.boundHashOps(SKUKILL_CACHE_PREFIX);
+                    List<String> list = hashOps.multiGet(range);
+                    if (list != null) {
+                        return list.stream().map(item -> {
+                            SeckillSkuRedisTo redisTo = null;
+                            try {
+                                redisTo = new ObjectMapper().readValue(item, SeckillSkuRedisTo.class);
+                            } catch (JsonProcessingException e) {
+                                e.printStackTrace();
+                            }
 //						redisTo.setRandomCode(null);
-                        return redisTo;
-                    }).collect(Collectors.toList());
+                            return redisTo;
+                        }).collect(Collectors.toList());
+                    }
+                    break;
                 }
-                break;
             }
+        } catch (BlockException e) {
+            System.out.println("受保护的资源getCurrentSeckillSkus调用失败" + e.getMessage());
         }
 
+        return null;
+    }
+
+    public List<SeckillSkuRedisTo> blockHandler(BlockException e) {
+        System.out.println("受保护的资源CurrentSeckillSkusResource调用失败" + e.getMessage());
         return null;
     }
 
