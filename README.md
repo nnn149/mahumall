@@ -165,15 +165,75 @@ feign在远程调用之前要构造请求，调用拦截器（默认没有拦截
 
 ## Sentinel
 
-先把可能需要保护的资源定义好（主流框架有默认适配），之后再配置规则。编码时只需考虑这个代码是否需要保护，若需要则定义为一个资源。
+先把可能需要保护的资源定义好（主流框架有默认适配(controller)），之后再配置规则。编码时只需考虑这个代码是否需要保护，若需要则定义为一个资源。
 
 添加actuator依赖并暴露endpoint路径，支持审计，实时监控
+
+### 熔断
 
 **流量控制**：**直接**：直接限制这个服务的请求；**链路**：A->C和B->C，可以指定只有A->C生效，可以指定入口；**关联**：两个资源存在争抢或依赖关系，可以限制某个。比如读写数据看可以当写频繁时对读限流
 
 **流控效果**：**快速失败**：直接抛出异常；**Warn up**：预热/冷启动：系统长期低水位情况下，流量暴增，系统瞬间拉升到高水位可能瞬间压垮系统，通过预热使通过对流量缓慢增加，一定时间内逐渐增加到阈值上限。**排队等待**：设置一个值，超出这个值的请求等待，并有超时时间。
 
 
+
+**Feign调用方熔断保护**:开启`feign.sentinel.enabled=true` , FeignClient指定fallback  [例子](product/src/main/java/cn/nicenan/mahumall/product/feign/fallback/SeckillFeignServiceFallback.java)
+
+
+
+### 降级
+
+远程服务被降级后，默认触发熔断方法，也就是服务被指定时间内停止。
+
+**降级策略**: 
+
+1. RT：平均响应时间，1秒内5次超过RT值，停止服务为熔断时长的时间
+
+**调用方可以手动指定远程服务的降级策略**
+
+流量超大的时候，必须牺牲一些远程服务，在服务的**提供方**指定降级策略，实际上提供方服务在运行，却不执行业务逻辑，[直接返回降级数据(限流)](seckill/src/main/java/cn/nicenan/mahumall/seckill/config/SeckillSentinelConfig.java)。一般在调用方降级，除非遇到全局的问题。
+
+### 自定义受保护的资源
+
+使用trycatch
+
+```java
+try (Entry entry = SphU.entry("getCurrentSeckillSkus")) {} catch (BlockException e) {}
+```
+
+使用注解`@SentinelResource(value = "", blockHandler = "")`，同类指定一个同签名的方法作为blockHandler ,BlockException参数接收异常。blockHandler在原方法被降级限流系统保护的时候调用。fallback针对所有异常，Throwable参数接收对应异常。
+
+
+
+### 网关控制
+
+在网关进行流控效果更好，不需要进入微服务即可处理。
+
+### 持久化
+
+sentinel的配置默认存在内存，重启应用会丢失。
+
+...
+
+## 链路追踪
+
+Sleuth(追踪)+Zipkin(可视化)
+
+**Sleuth基本术语**
+
+1. Span(跨度)：基本工作单元。发送一个远程调度任务就会产生一个Span，用64位的唯一ID标识。还具有摘要，时间戳等。A->B->C三次调用产生3个Span
+2. Trace(跟踪)：一系列Span组成的一个树状结构。
+3. Annotation(标注)：用来及时记录一个事件。用注解定义：
+   1. cs: Client-Sent 客户端发送一个请求(span)的开始
+   2. sr: Server Recelved 服务端获得请求并准备开始处理它，sr-cs的时间戳得到网络传输时间
+   3. ss: Server Sent 服务端发送响应，表示请求处理的完成，ss-sr的时间戳得到服务器请求的时间
+   4. cr: Client Recelved(客户端接收响应) 此时Span的结束，cr-cs的时间戳得到整个请求消耗的时间
+
+
+
+zipkin
+
+`docker run -d -p9411:9411 openzipkin/zipkin`
 
 ## 定时任务
 
