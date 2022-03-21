@@ -235,6 +235,14 @@ zipkin
 
 `docker run -d -p9411:9411 openzipkin/zipkin`
 
+访问zipkin的web可视化界面，可以查看详细的调用情况。
+
+默认数据存储在内存，可以指定数据存储位置，由于量很大，可以存到elasticsearch中。
+
+`docker run -d -p9411:9411 --envSTORAGE_TYPE=elasticsearch --envES_HOSTS=192.168.2.211:9200 openzipkin/zipkin-dependencles`
+
+通过查看耗时，和错误情况，可以进行熔断降级
+
 ## 定时任务
 
  `@Schedule` cron表达式：秒分时日月周。六位。
