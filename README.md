@@ -1045,6 +1045,118 @@ channel.basicNack()和channel.basicReject()拒绝消息
 2. 发送者发送流量太大
    1. 限流，限业务
 
+## Kubernetes
+
+### 概念
+
+简称k8s，用于自动**部署**，扩展和管理**容器**化应用的系统。
+
+服务发现和负载均衡，存储编排，自动部署和回滚，自动二进制打包，自我修复，密钥与配置管理
+
+ 一个Master组件管理很多Node组件。master调度node，node中有容器应用。操作master来控制node
+
+**Master节点**
+
+1. kube-apiserver：对外暴露k8s的api接口，是外界进行资源操作的唯一入口。提供认证授权api注册发现等
+2. etcd：兼具一致性和高可用性的键值数据库，可作为k8s所有集群数据的后台数据库，集群下需要有备份计划
+3. kube-scheduler：调度器，监视新创建的未指定运行节点的pod，选择节点保存到etcd中再通知apiserver再pod上运行。所有集训操作都经过这个调度
+4. kube-controller-manager：控制器管理器
+   1. node controller：节点控制器，负责节点出现故障进行通知和响应
+   2. replication controller：副本控制器，负责位系统中的每个副本控制器对象维护正确数量的pod
+   3. endpoints controller：端点控制器，加入service和pod
+   4. service account & Token controller：服务账户和令牌控制器
+
+**Node节点**
+
+每个服务器都是一个node，维护运行pod
+
+1. **container runtime**：容器运行环境，docker，其他实现k8s接口的容器也可以
+2. **kubelet**：每个节点上运行的代理，保证容器运行在pod中（）。维护容器的生命周期，负责Volume和网络的管理
+3. **kube-proxy**：网络的代理，请求过来负载均衡到pod
+4. fluentd：守护进程，提供日志收集
+
+
+
+
+
+**pod**
+
+1. 可以包含多个容器
+2. pod是k8s的最小部署单元
+3. 一个pod内共享网络。
+
+**volume**
+
+1. 声明再pod容器中可访问的文件目录
+2. 可以被挂载pod中一个或多个容器指定路径下
+3. 支持多种后端抽象（本次地存储，分布式存储，云存储）
+
+**[Controllers](https://kubernetes.io/zh/docs/concepts/workloads/controllers/)**
+
+1. 更高层次对象，部署和管理pod
+2. ReplicaSet：维持 pod数量,控制副本复制
+3. StatefulSet，Deplotment部署有状态或无状态应用
+4. job一次性任务，cronjob定时任务
+
+**Deployment**
+
+1. 定义一组pod的副本数目，版本等
+2. 其实是master的部署信息
+
+**ReplicaSet **
+
+1. 控制副本复制
+
+**DaemonSet**
+
+1. 确保全部（或者某些）节点上运行一个 Pod 的副本。
+2. 在每个节点上运行集群守护进程
+3. 在每个节点上运行日志收集守护进程
+4. 在每个节点上运行监控守护进程
+
+**Service**
+
+1. 定义**一组pod **的访问策略，比如暴露端口
+2. pod的负载均衡，提供一个或多个pod的稳定访问地址
+2. service之间可以网络访问
+2. 统一pod的访问入口
+
+**Label**：标签，用于对对象资源的查询，筛选
+
+**namespace**： 命名空间，逻辑隔离，每一个资源都属于一个namespace，资源名不能重复。
+
+### 安装
+
+kubeadm快速部署k8s集群，需要2C2G，禁用swap。[文档](https://kubernetes.io/zh/docs/setup/production-environment/tools/kubeadm/install-kubeadm/)
+
+1. 在每个节点安装docker和kubeadm
+2. 部署 Master
+3. 部署容器网络插件
+4. 部署node，加入master
+5. 部署dashboard web
+
+
+
+k8s部署一份镜像到某个node，这个node宕机后，k8s自动再另一个node开启一个镜像
+
+### Kubesphere
+
+企业空间：不同的团队项目 有不同的企业空间
+
+项目：每个项目都要属于要给企业空间
+
+账号：用户登录使用
+
+角色：角色对应不同的权限
+
+1. 总管理员
+2. HR：创建账号
+3. 企业空间总管理员(mahumall-workspace-admin)：增删改查企业空间，邀请某个企业空间管理员
+4. 企业空间管理员(mahumall-workspace-admin)：管理所在的企业空间，邀请项目管理员等
+5. 项目管理员(mahumall-workspace-self-provisioner)：增删改查项目，邀请开发人员（operator）等
+   1. 创建项目，设置配额，邀请开发人员
+   2. 创建DevOps 项目，用于自动化运维部署，邀请维护者(管理流水线)和开发者(触发流水线)
+
 ## 坑
 
 Feign调用是泛型消失，对象变成LinkedHashMap。使用jackson反序列化为对象时，可能远程和本地的对象属性不一致，设置`objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);`忽略不存在的属性。[R.java](common/src/main/java/cn/nicenan/mahumall/common/utils/R.java)
