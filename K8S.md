@@ -240,10 +240,6 @@ kubectl get pod --all-namespaces
 
 
 
-
-
-
-
 config-sample.yaml 例子
 
 ```yaml
