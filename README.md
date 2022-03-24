@@ -1148,6 +1148,28 @@ kubeadm快速部署k8s集群，需要2C2G，禁用swap。[文档](https://kubern
 
 k8s部署一份镜像到某个node，这个node宕机后，k8s自动再另一个node开启一个镜像
 
+
+
+### 部署有状态的服务
+
+1. 有状态服务抽取配置为 ConfigMap
+2. 有状态服务必须使用pvc持久化数据
+3. 暴露service，服务集群内访问使用DNS提供的稳定域名
+
+### 部署微服务
+
+1. 制作项目镜像打包上传仓库Dockerfile
+   1. 每个项目抽取配置application-prod.properties
+   2. 为每一个项目准备一个Dockerfile
+2. 编写Deployment文件部署到k8s集群的yaml ：产生pod
+   1. 为每一个项目准备一个k8s的部署描述文件
+3. 编写Service文件暴露到k8s集群的yaml ：产生Service
+4. 集群内访问测试，外部访问测试
+
+编写好Jenkinsfile
+
+
+
 ### Kubesphere
 
 企业空间：不同的团队项目 有不同的企业空间

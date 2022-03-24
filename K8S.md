@@ -465,3 +465,61 @@ spec:
 
 ```
 
+# Mysql主从
+
+master配置
+
+```pro
+[client]
+default-character-set=utf8mb4
+[mysql]
+default-character-set=utf8mb4
+[mysqld]
+init_connect='SET NAMES utf8mb4'
+collation-server=utf8mb4_unicode_ci
+skip-character-set-client-handshake = true
+skip-name-resolve
+secure_file_priv=/var/lib/mysql
+
+server_id=1
+log-bin=mysql-bin
+read-only=0
+binlog-do-db=mahumall_ums
+binlog-do-db=mahumall_pms
+binlog-do-db=mahumall_oms
+binlog-do-db=mahumall_sms
+binlog-do-db=mahumall_wms
+binlog-do-db=mahumall_admin
+replicate-ignore-db=mysql
+replicate-ignore-db=sys
+replicate-ignore-db=information_schema
+replicate-ignore-db=performance_schema
+```
+
+slaver配置
+
+```
+[client]
+default-character-set=utf8mb4
+[mysql]
+default-character-set=utf8mb4
+[mysqld]
+init_connect='SET NAMES utf8mb4'
+collation-server=utf8mb4_unicode_ci
+skip-character-set-client-handshake = true
+skip-name-resolve
+secure_file_priv=/var/lib/mysql
+
+server_id=2
+log-bin=mysql-bin
+read-only=1
+binlog-do-db=mahumall_ums
+binlog-do-db=mahumall_pms
+binlog-do-db=mahumall_oms
+binlog-do-db=mahumall_sms
+binlog-do-db=mahumall_wms
+binlog-do-db=mahumall_admin
+replicate-ignore-db=mysql
+replicate-ignore-db=sys
+replicate-ignore-db=information_schema
+replicate-ignore-db=performance_schema
