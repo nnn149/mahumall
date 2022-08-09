@@ -6,6 +6,8 @@
 
 ### nacos注册
 
+(呐扣斯)
+
 1.配置文件内给应用起名字和设置nacos server地址
 2.Application内开启访问注册与发现功能 @EnableDiscoveryClient
 
@@ -14,6 +16,8 @@
 [geteway例子](gateway/src/main/resources/application.yml)
 
 ### feign
+
+(粪)
 
 ```text
      *   1)、让所有请求过网关；
@@ -167,6 +171,8 @@ feign在远程调用之前要构造请求，调用拦截器（默认没有拦截
 
 
 ## Sentinel
+
+(森踢脑)
 
 先把可能需要保护的资源定义好（主流框架有默认适配(controller)），之后再配置规则。编码时只需考虑这个代码是否需要保护，若需要则定义为一个资源。
 
@@ -1266,7 +1272,7 @@ k8s如果爆OOM错误，说明内存有问题，[修改](https://www.bilibili.co
 
 ### MySql集群
 
-MySql-MMM  主主复制管理器
+MySql-MMM  **主主复制**管理器
 
 两个主，一个从，一个主负责写，另外俩负责读，三个节点有不同的ip（Monitor分配）。双主复制，主从复制。monitor控制写ip和读ip指向的节点，出现问题时，自动切换ip指向的节点。
 
@@ -1282,9 +1288,11 @@ mycat或dbproxy作为后面所有数据库的代理。主写从读，从节点�
 
 主节点出问题，有备用主节点做替代，双主复制，keepalived做存活检查做热备。
 
+主主模式自增id可以改配置文件，使第一台1，3，5，7，第二台2，4，6，8这样递增，则不会出现主键重复
 
 
-主从复制同步简单流程：
+
+**主从复制**同步简单流程：
 
 修改my.conf ：主从统一编码。
 
@@ -1301,6 +1309,10 @@ mycat或dbproxy作为后面所有数据库的代理。主写从读，从节点�
 **疑问** 代码中读写分主从？？？？？？？？？？？？
 
 #### [ShardingSphere 数据库](https://shardingsphere.apache.org/document/current/cn/overview/)
+
+sharding-jdbc
+
+sharding-proxy
 
 开源的分布式数据库解决方案组成的生态圈
 
@@ -1358,6 +1370,8 @@ key事务操作有限，一般都使用lua脚本
 普通模式(默认)：只同步元数据，队列，交换机等，不同步数据。无法解决单点故障
 
 镜像模式(推荐)：元数据和数据都进行同步。
+
+设置相同cookie才可以组成集群，在设置link参数可以连接到其他mq。rbmq的ctrl里使用join命令加入其他mq。然后改成镜像模式，进入随便一个mq控制台设置策略，都给设置成同步高可用镜像模式。
 
 ## 坑
 
