@@ -42,6 +42,31 @@ InnoDB聚集索引：聚集索引的顺序就决定了数据行的物理存储�
 
 在开启**事务**后，在事务内尽可能只操作数据库，并有意识地减少锁的持有时间（比如在事务内需要插入&&修改数据，那可以先插入后修改。因为修改是更新操作，会加行锁。如果先更新，那并发下可能会导致多个事务的请求等待行锁释放
 
+查询慢如何优化
+
+1. show profile查看具体是那条sql慢
+2. explain查看sql执行计划，看自己写的sql是否走了索引
+   1. possible_keys字段查看设置的索引
+   2. key字段=实际用到的索引
+   3. extra 会显示没走索引的操作?
+      1. 看到filesort要警觉，会带来大量耗时，因为正常是索引排序是内存内排序
+         1. orderby 可能会出现，排序字段没有在索引内
+         2. 建一个索引，既能满足查询又能排序，比如是先where id,orderby time,建一个id在前，time在后的索引
+      2. using mmr是主键排序了，如果查询的条件字段本身有序，可以置顶order这个字段，取消主键排序
+      3. using where 代表扫描数据按行帅选了
+   4. 看type是否是all进行了全表查询，
+      1. const 通过常量值帅选出唯一数据，效率高
+      2. range 代表通过索引进行了范围扫描 where id>3
+   5. rows字段扫描行数
+3. 检查是否用了最优索引
+4. 是否查询了过多字段或过多数据
+5. 分表
+6. 不等于操作符是永远不会用到索引的，因此对它的处理只会产生全表扫描。 优化方法： key<>0 改为 key>0 or key<0。
+7. 开启慢查询l日志；例如100ms外
+8. or 语句前后没有同时使用索引。当 or 语句查询字段只有一个是索引，该索引失效，只有当 or 语句左右查询字段均为索引时，才会生效
+9. 数据类型出现隐式转化，那么会导致索引失效，造成全表扫描效率极低
+10. 对于复合索引，如果不使用前列，后续列也将无法使用
+
 **旧数据**存到hive
 
 有**字符串检索**场景把数据转移到Elastic Search：MySQL->Elasticsearch需要有对应的同步程序(一般就是监听MySQL的binlog，解析binlog后导入到Elasticsearch)
@@ -292,3 +317,110 @@ msql的逻辑删除  mybatis,一级二级缓存
 OOM调优
 
 分布式日志：ELK EFK
+
+
+
+maven install package区别
+
+- install **本地仓库**的相应目录中，供其他项目或模块引用
+- package就生成jar
+
+springboot 三级缓存
+
+线程池相关
+
+mysql多条语句查看那条慢profile，complain
+
+mysql索引失效的情况
+
+hashtable，vetor为什么过时
+
+springboot的bean是否线程安全，怎么使得bean线程安全
+
+threadlocal
+
+>  Spring的作用域(scope)：
+>
+> singleton:单例，默认作用域。
+>
+> prototype:原型，每次创建一个新对象。
+>
+> request:请求，每次Http请求创建一个新对象，适用于WebApplicationContext环境下。
+>
+> session:会话，同一个会话共享一个实例，不同会话使用不用的实例。
+>
+> global-session:全局会话，所有会话共享一个实例。
+
+gataway用处
+
+nacos配置中心改了数据库链接，生效？：
+
+druid可以  配置动态数据源，
+
+如何切换dev环境，不用手动输入参数
+
+redis用过哪些数据结构
+
+threadlocal为什么会泄露：
+
+- 两个原因，web请求线程池在并发中可能用到同一个线程，
+- key是弱引用，记得收容remove
+
+线程顺序执行
+
+- 使用join，父线程等待子线程结束之后才能继续运行
+- 使用单线程的线程池
+- volatile做一个信号量
+
+线程间共享变量
+
+- synchronized 枷锁
+- volatile 是访问可见（强迫线程重新读取变量值）无法保证原子性（i++）
+- 使用atomic 包小的atomicnintger等
+
+
+
+怎么做鉴权的feign
+
+feign如何返回异常报错信息
+
+全局异常
+
+dockerfile怎么做
+
+springboot @scoop
+
+如何在springboot中输出启动端口
+
+mysql 慢查询日志
+
+mysql和redis一致性 ，mq异步通知不断重试，保证消息顺序一致性，canal监听log同步到mq.然后同步到redis，分布式锁，
+
+延迟双删：删redis-更新sql-延迟n秒删redis（sleep延迟对性能不好，可以用mq延迟消息）
+
+wait和sleep区别
+
+sleep（0）可以主动让出cpu（阻塞态）
+
+thread.yield() 变为就绪态
+
+降级和熔断区别
+
+- 熔断一般是故障引起
+- 降级一般从整体负荷考虑
+
+redis 大key，直接删除消耗资源，用unlink一部删除。bigkes查找string类型大key
+
+如何查看springboot的 mapping（请求接口），数据库连接情况
+
+springboot的事务注解的传播行为：
+
+事务失效可能：
+
+	1. 抛出受检异常，可以设置for
+	1. 多线程调用，因为数据库连接是threadlocal内
+
+1. service 一个方法用this调用本类的事务方法，因为this对象不是代理对象，所以导致事务失效
+   1. 可以使用aopcontext.currentProxy（）强转后获得代理对象，然后调用事务方法
+
+nacao挂了其他服务正常通讯，每次服务上线注册自己，然后拉去所有在线
