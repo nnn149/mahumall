@@ -424,3 +424,240 @@ springboot的事务注解的传播行为：
    1. 可以使用aopcontext.currentProxy（）强转后获得代理对象，然后调用事务方法
 
 nacao挂了其他服务正常通讯，每次服务上线注册自己，然后拉去所有在线
+
+实际优化的sql：
+
+spring注解
+
+vue生命周期
+
+mybatisplus wapper怎么写
+
+使用的springcloud版本
+
+
+
+# .NET
+
+**使用泛型的好处？**
+●代码复用：我们一套代码可以支持不同的类性。
+●降低了耦合性：代码逻辑和数据类型之间分离，实现了解耦。
+●更好的可读性：我们在使用集合的时候，定义了一个list 如List<String>，一看便知道这个一个存放String类型的list。
+●程序性能提高：在一定的程度上减少了类型转换装箱与拆箱操作带来的性能损耗。
+
+**C#下Hashtable和Dictionary区别**
+
+- Dictionary是泛型存储，不需要进行类型转换，Hashtable由于使用object，在存储或者读取值时都需要进行类型转换，所以比较耗时。
+
+- 单线程程序中推荐使用 Dictionary, 有泛型优势, 且读取速度较快, 容量利用更充分。多线程程序中推荐使用 Hashtable, 默认的 Hashtable 允许单线程写入, 多线程读取, 对 Hashtable 进一步调用 Synchronized() 方法可以获得完全线程安全的类型. 而 Dictionary 非线程安全, 必须人为使用 lock 语句进行保护, 效率大减。
+
+  
+
+**简述后台线程和前台线程的区别？**
+
+应用程序必须运行完所有的前台线程才可以退出；
+而对于后台线程，应用程序则可以不考虑其是否已经运行完毕而直接退出，所有的后台线程在应用程序退出时都会自动结束。
+通过将 Thread.IsBackground 设置为 true，就可以将线程指定为后台线程，主线程就是一个前台线程。
+
+**C#四种委托的异同？**
+1delegate ,至少0个参数，至多32个参数，可以无返回值，可以指定返回值类型。
+2Action ,至少0个参数，无返回值的泛型委托。
+3Func ,至少0个参数，至多16个参数，必须有返回值的泛型委托。
+4Predicate ,有且只有一个参数，返回值只为 bool 类型。
+
+**ADO.NET常用的对象有哪些，分别有什么作用？**
+
+SqlConnection :连接对象，用于执行与数据库的连接。 
+SqlCommand:命令对象，用于对数据库执行 SQL 语句。 
+SqlDataAdapter:适配器对象，用于填充数据集和更新数据库。 
+SqlParameter:参数对象，用于执行参数化 SQL 语句。 
+SqlDataReader:读取器对象，用于从数据库中快速逐行读取数据。 SqlTransaction:事务对象，用于执行数据库事务。
+
+**C#中堆和栈的区别？**
+
+栈：由编译器自动分配、释放。在函数体中定义的变量通常在栈上。堆：一般由程序员分配释放。用 new、 malloc 等分配内存函数分配得到的就是在堆上。存放在栈中时要管存储顺序，保持着先进后出的原则，他是一片连续的内存域，有系统自动分配和维护；
+
+**静态构造函数特点是什么**？
+
+最先被执行的构造函数，且在一个类里只允许有一个无参的静态构造函数
+
+执行顺序：静态变量 > 静态构造函数 > 实例变量 > 实例构造函数
+
+**C#中什么是值类型与引用类型？**
+
+值类型：struct 、 enum 、 int 、 float 、 char 、 bool 、 decimal
+
+引用类型：class 、 delegate 、 interface 、 array 、 object 、 string
+
+**请详述在C#中类(class)与结构(struct)的异同？**
+
+class 可以被实例化 , 属于引用类型 ,
+
+class 可以实现接口和单继承其他类 , 还可以作为基类型 , 是分配在内存的堆上的
+
+struct 属于值类型 , 不能作为基类型 , 但是可以实现接口 , 是分配在内存的栈上的 .
+
+**C#中参数传递 ref 与 out 的区别？**
+
+ref 指定的参数在函数调用时必须先初始化，而 out 不用
+
+ out 指定的参数在进入函数时会清空自己，因此必须在函数内部进行初始化赋值操作，而 ref 不用
+
+总结：ref 可以把值传到方法里，也可以把值传到方法外；out 只可以把值传到方法外
+
+**C#中用sealed修饰的类有什么特点？**
+
+密封，不能继承。
+
+**什么是扩展方法**？
+
+必须要静态类中的静态方法 2. 第一个参数的类型是要扩展的类型，并且需要添加this 关键字以标识其为扩展方法
+
+**const和readonly有什么区别？**
+
+1 、初始化位置不同。const 必须在声明的同时赋值；readonly 即可以在声明处赋值 ;
+
+2 、修饰对象不同。const 即可以修饰类的字段，也可以修饰局部变量；readonly 只能修饰类的字段
+
+3 、 const 是编译时常量，在编译时确定该值；readonly 是运行时常量，在运行时确定该值。
+
+4 、 const 默认是静态的；而 readonly 如果设置成静态需要显示声明
+
+5 、修饰引用类型时不同， const 只能修饰 string 或值为 null 的其他引用类型；readonly 可以是任何类型。
+
+Math.Round 将值舍入到最接近的整数或指定的小数位数。
+
+**序列化**
+
+使用`BinaryFormatter`，被序列化的对象的类上`[Serializable]`
+
+**反射**
+
+在使用反射的开始，你会获取一个 Type 类型的对象，从这个对象上进一步获取 程序集，类型，模块 等信息，可以通过 反射 动态的生成某个类型的实例，甚至还能动态调用这个类型上的方法。
+
+Assembly定义和加载程序集
+
+MethodInfo了解方法的名称
+
+FieldInfo了解字段的名称
+
+PropertyInfo了解属性的名称
+
+反射创建对象
+
+根据程序集名
+
+`assembly.CreateInstance`
+
+根据类型
+
+`Activator.CreateInstance`
+
+**修饰符**
+
+public：成员可以被任何代码访问。
+
+private：成员仅能被同一个类中的代码访问，如果在类成员前未使用任何访问修饰 符，则默认为private。
+
+ internal：成员仅能被同一个项目中的代码访问。
+
+protected：成员只能由类或派生类中的代码访问
+
+**解释什么是依赖属性，它和以前的属性有什么不同？为什么在WPF会使用它？**
+
+(1)依赖属性是一种特定类型的属性。这种属性的特殊之处在于，其属性值受到 Windows 运行时中专用属性系统的跟踪和影响。
+
+(2)依赖属性的用途是提供一种系统的方式，用来基于其他输入（在应用运行时其内部出现的其他属性、事件和状态）计算属性的值。
+
+(3)依赖属性代表或支持编程模型的某种特定功能，用于定义 Windows 运行时应用，这种模型使用 XAML 编写 UI，使用 C#、Microsoft Visual Basic 或 Visual C++ 组件扩展 (C++/CX) 编写代码。
+
+ **Winform中如何跨线程修改控件**
+
+通过，在这个子线程中，通过this.Invoke() 或 this.BeginInvoke()的方式通过执行委托的方式，在委托里去修改，就可以。
+
+**遍历页面上所有TextBox控件**
+
+`this.Controls`
+
+**怎么让一个窗体在运行时，只能打开一个？**
+
+遍历Application的OpenedForms集合，从中如果找到了该Form，将其激活即可
+
+ **如何在关闭窗体时，可以取消关闭？**
+
+Form_Closing事件中，首先显示询问消息框，当用户点击“是”才执行关闭，当点击“否”，
+
+ **如何在Form加载时，动态添加控件到Form中？**
+
+this.Controls.Add
+
+## Task
+
+**启动方式**
+
+``` C#
+　　var t1 = new Task(() => TaskMethod("Task 1"));
+　　t1.Start();
+　　Task.WaitAll(t1);//等待所有任务结束 　　注:任务的状态:
+
+   Task.Factory.StartNew(() => TaskMethod("Task 3")); 直接异步的方法
+　　//或者
+　　var t3=Task.Factory.StartNew(() => TaskMethod("Task 3"));
+　　Task.WaitAll(t3);//等待所有任务结束
+
+//主线程阻塞，等待结束
+Task.WaitAll(taskList.ToArray());
+
+  //带返回值
+　  Task<int> task = CreateTask("Task 1");
+　　task.Start();
+　　int result = task.Result;
+
+//任务完成时执行处理   Task cwt = task.ContinueWith
+
+//使用IProgress实现异步编程的进程通知
+ progress.Report(1);
+
+
+//取消任务，任务中遍历 tokenSource.IsCancellationRequested
+```
+
+**取消任务**
+
+` var cts = new CancellationTokenSource();`
+
+　ThreadPool相比Thread来说具备了很多优势，但是ThreadPool却又存在一些使用上的不方便。比如：
+　　◆ ThreadPool不支持线程的取消、完成、失败通知等交互性操作；
+　　◆ ThreadPool不支持线程执行的先后次序；
+
+## Sql Server
+
+行转列 Case When，PIVOT
+
+主键做聚集索引，一般来说，存储的顺序和索引的顺序一致
+
+非聚集索引，存储的顺序和索引不是按顺序的
+
+PS：聚集索引一个表只能有一个，而非聚集索引一个表可以存在多个。
+
+ **存储过程**
+
+Create Procedur name @xxx nvchar(50)  @xxx char()output as  begin end ,
+
+## 数据类型
+
+**varchar和nvarchar的区别**
+
+Unicode字符集是为了解决字符集这种不兼容的问题而产生的，它所有的字符都用两个字节表示，即英文字符也是用两个字节表示。
+
+中文字符，用nchar/nvarchar存储，如果纯英文和数字(保证不含中文)，则用char/varchar存储。
+
+**sql左连接、右连接、内连接有什么区别？**
+
+1. 左连接：左连接的基础表为left join左侧数据表，右表只会展示符合搜索条件的记录。
+2. 右连接：右连接的基础表为right join右侧数据表，左表只会展示符合搜索条件的记录，左表不足的地方用null填充。
+3. 内连接：并不以谁为基础,它只显示符合条件的记录
+
+
+
+group by 单独使用可以去重
